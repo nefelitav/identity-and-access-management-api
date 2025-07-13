@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    image: node:20
+    container_name: app
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    command: sh -c "yarn install && npx prisma generate --schema=./packages/prisma/prisma/schema.prisma && npx prisma db push --schema=./packages/prisma/prisma/schema.prisma && yarn build && yarn dev"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: "postgresql://user:password@postgres:5432/auth?schema=public"
+      REDIS_URL: redis://redis:6379
+    networks:
+      - auth-net
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - auth-net
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: auth
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d auth" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - auth-net
+
+networks:
+  auth-net:
+    driver: bridge
