@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { SessionController } from '~/controllers';
+import { authMiddleware } from '~/middleware';
 
 const sessionRouter = Router();
 
-sessionRouter.get('/', SessionController.listSessions);
-sessionRouter.delete('/:sessionId', SessionController.deleteSession);
-sessionRouter.delete('/', SessionController.deleteAllSessions);
+sessionRouter.get('/', authMiddleware, SessionController.listSessions);
+sessionRouter.delete('/:sessionId', authMiddleware, SessionController.deleteSession);
+sessionRouter.delete('/', authMiddleware, SessionController.deleteAllSessions);
 
 export default sessionRouter;
