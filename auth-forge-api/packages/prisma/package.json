@@ -1,0 +1,20 @@
+{
+  "name": "@repo/prisma",
+  "main": "index.js",
+  "license": "MIT",
+  "version": "1.0.0",
+  "exports": {
+    ".": {
+      "import": "./index.js"
+    }
+  },
+  "scripts": {
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.10.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.10.1"
+  }
+}

@@ -3,13 +3,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "docs": "typedoc --entryPointStrategy expand --out docs apps",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "test": "jest"
+    "test": "jest --passWithNoTests",
+    "docs": "typedoc --entryPointStrategy expand --out docs apps --tsconfig apps/api/tsconfig.json"
   },
   "lint-staged": {
     "*.{ts,tsx,js,json,md}": [
