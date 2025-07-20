@@ -14,13 +14,14 @@ datasource db {
 }
 
 model User {
-  id         String      @id @default(uuid())
-  email      String      @unique
+  id         String           @id @default(uuid())
+  email      String           @unique
   password   String
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
-  sessions Session[]
+  sessions   Session[]
+  userRoles   UserRole[]
 }
 
 model Session {
@@ -38,4 +39,44 @@ model Session {
 
   @@index([userId])
   @@index([refreshToken])
+}
+
+model Role {
+  id               String            @id @default(uuid())
+  name             String            @unique
+  userRoles        UserRole[]
+  rolePermissions  RolePermission[]
+}
+
+model UserRole {
+  id     String @id @default(uuid())
+  userId String
+  roleId String
+
+  role   Role   @relation(fields: [roleId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([roleId])
+
+  @@unique([userId, roleId], name: "userId_roleId")
+}
+
+model Permission {
+  id                String            @id @default(uuid())
+  name              String            @unique
+  rolePermissions   RolePermission[]
+}
+
+model RolePermission {
+  id           String      @id @default(uuid())
+  roleId       String
+  permissionId String
+
+  role         Role        @relation(fields: [roleId], references: [id])
+  permission   Permission  @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
 }
