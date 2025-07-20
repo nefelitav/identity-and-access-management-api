@@ -41,31 +41,31 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        working-directory: ./auth-forge-api
+        working-directory: ./
         run: npm install
 
       - name: Check linting
-        working-directory: ./auth-forge-api
+        working-directory: ./
         run: npm run lint
 
       - name: Check format
-        working-directory: ./auth-forge-api
+        working-directory: ./
         run: npm run format
 
       - name: Check types
-        working-directory: ./auth-forge-api
+        working-directory: ./
         run: npm run check-types
 
       - name: Run tests
-        working-directory: ./auth-forge-api
+        working-directory: ./
         run: npm run test
 
       - name: Audit npm dependencies
-        working-directory: ./auth-forge-api
+        working-directory: ./
         run: npm audit --audit-level=moderate
 
       - name: Generate docs
-        working-directory: ./auth-forge-api
+        working-directory: ./
         run: npm run docs
 
   docker:
@@ -84,10 +84,10 @@ jobs:
           sudo apt-get install -y docker-compose-plugin
 
       - name: Start services
-        working-directory: ./auth-forge-api
+        working-directory: ./
         run: docker compose up -d --build
 
       - name: Tear down services
         if: always()
-        working-directory: ./auth-forge-api
+        working-directory: ./
         run: docker compose down
