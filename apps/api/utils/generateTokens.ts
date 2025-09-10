@@ -7,6 +7,7 @@ export async function generateTokens(
   userId: string,
   userAgent?: string,
   ip?: string,
+  remember = false,
 ) {
   const refreshToken = uuidv4();
   const accessToken = jwt.sign(
@@ -17,7 +18,17 @@ export async function generateTokens(
     },
   );
 
-  await SessionService.createSession(userId, refreshToken, userAgent, ip);
+  const expiresIn = remember
+    ? 30 * 24 * 60 * 60 // 30 days
+    : 7 * 24 * 60 * 60; // 7 days
+
+  await SessionService.createSession(
+    userId,
+    refreshToken,
+    userAgent,
+    ip,
+    expiresIn,
+  );
 
   return { accessToken, refreshToken };
 }
