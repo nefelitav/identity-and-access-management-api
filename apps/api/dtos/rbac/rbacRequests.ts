@@ -1,6 +1,6 @@
 import { Request } from "express";
 
-interface CheckPermissionRequestQuery {
+export interface CheckPermissionRequestQuery {
   userId: string;
   permission: string;
 }
@@ -15,6 +15,7 @@ interface GrantPermissionRequestBody {
   userId: string;
   permission: string;
 }
+
 export type GrantPermissionRequest = Request<
   {},
   {},
@@ -25,6 +26,7 @@ interface RevokePermissionRequestBody {
   userId: string;
   permission: string;
 }
+
 export type RevokePermissionRequest = Request<
   {},
   {},

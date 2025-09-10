@@ -1,14 +1,12 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { RbacService } from "~/services";
 import {
   AssignRoleRequest,
   AssignRoleResponse,
   CreateRoleRequest,
   CreateRoleResponse,
-  DeleteRoleRequest,
   DeleteRoleResponse,
   GetAllRolesResponse,
-  GetRolesRequest,
   GetRolesResponse,
   RemoveRoleRequest,
   RemoveRoleResponse,
@@ -48,7 +46,10 @@ export class RbacController {
     }
   }
 
-  static async getRoles(req: GetRolesRequest, res: Response<GetRolesResponse>) {
+  static async getRoles(
+    req: Request<{ userId: string }>,
+    res: Response<GetRolesResponse>,
+  ) {
     try {
       const { userId } = req.params;
       const roles = await RbacService.getUserRoles(userId);
@@ -90,7 +91,7 @@ export class RbacController {
   }
 
   static async deleteRole(
-    req: DeleteRoleRequest,
+    req: Request<{ name: string }>,
     res: Response<DeleteRoleResponse>,
   ) {
     try {

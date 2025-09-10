@@ -1,14 +1,11 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { AdminService, ProfileService } from "~/services";
 import {
-  UpdateProfileAdminRequest,
-  DeleteUserRequest,
   DeleteUserResponse,
   UpdateProfileResponse,
   GetUsersResponse,
   DeleteUsersResponse,
   GetUserResponse,
-  GetUserRequest,
 } from "~/dtos";
 import { createLogger, ResponseCode } from "~/utils";
 
@@ -16,7 +13,7 @@ const logger = createLogger("AdminController");
 
 export class AdminController {
   static async getUser(
-    req: GetUserRequest,
+    req: Request,
     res: Response<GetUserResponse>,
   ): Promise<void> {
     try {
@@ -68,7 +65,7 @@ export class AdminController {
   }
 
   static async deleteUser(
-    req: DeleteUserRequest,
+    req: Request,
     res: Response<DeleteUserResponse>,
   ): Promise<void> {
     try {
@@ -88,7 +85,7 @@ export class AdminController {
   }
 
   static async updateProfile(
-    req: UpdateProfileAdminRequest,
+    req: Request,
     res: Response<UpdateProfileResponse>,
   ): Promise<void> {
     try {
