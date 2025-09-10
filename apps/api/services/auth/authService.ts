@@ -56,11 +56,13 @@ export class AuthService {
     password,
     userAgent,
     ip,
+    remember = false,
   }: {
     email: string;
     password: string;
     userAgent?: string;
     ip?: string;
+    remember?: boolean;
   }) {
     const user = await UserRepository.findByEmail(email);
     if (!user) {
@@ -131,7 +133,7 @@ export class AuthService {
       });
     }
 
-    return generateTokens(user.id, userAgent, ip);
+    return generateTokens(user.id, userAgent, ip, remember);
   }
 
   static async logout({

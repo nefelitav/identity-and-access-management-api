@@ -48,7 +48,7 @@ export class AuthController {
     res: Response<LoginResponse>,
   ): Promise<void> {
     try {
-      const { email, password } = req.body;
+      const { email, password, remember } = req.body;
       const userAgent = req.headers["user-agent"];
       const ip = req.ip;
 
@@ -57,6 +57,7 @@ export class AuthController {
         password,
         userAgent,
         ip,
+        remember,
       });
       logger.info(`User logged in successfully: ${email}`);
       res.status(ResponseCode.OK).json({ success: true, data: tokens });

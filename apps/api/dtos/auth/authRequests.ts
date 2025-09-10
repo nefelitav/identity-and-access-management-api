@@ -8,6 +8,7 @@ export interface RegisterRequestBody {
 export interface LoginRequestBody {
   email: string;
   password: string;
+  remember?: boolean;
 }
 
 export interface RefreshRequestBody {
