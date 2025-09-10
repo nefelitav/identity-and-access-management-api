@@ -24,6 +24,9 @@ model User {
   userRoles   UserRole[]
 
   mfaSecret  MfaSecret?  @relation("UserMfaSecret")
+
+  failedLoginAttempts Int     @default(0)
+  lockoutUntil       DateTime?
 }
 
 model Session {

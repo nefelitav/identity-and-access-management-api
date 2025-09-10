@@ -8,7 +8,17 @@ import {
   UserNotFoundException,
 } from "~/exceptions";
 import { SessionService } from "~/services";
-import { generateTokens, JWT_EXPIRY, JWT_SECRET, SALT } from "~/utils";
+import {
+  generateTokens,
+  JWT_EXPIRY,
+  JWT_SECRET,
+  SALT,
+  sendEmail,
+} from "~/utils";
+import { PrismaClient } from "@prisma/client";
+import { AccountLockedException } from "~/exceptions/AccountLockedException";
+
+const prisma = new PrismaClient();
 
 export class AuthService {
   static async register({
@@ -53,8 +63,72 @@ export class AuthService {
     ip?: string;
   }) {
     const user = await UserRepository.findByEmail(email);
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user) {
       throw InvalidCredentialsException();
+    }
+
+    if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+      throw AccountLockedException(user.lockoutUntil);
+    }
+
+    const passwordValid = await bcrypt.compare(password, user.password);
+
+    if (!passwordValid) {
+      const failedAttempts = user.failedLoginAttempts + 1;
+
+      let lockoutUntil: Date | null = null;
+      const MAX_ATTEMPTS = 5;
+      const LOCKOUT_DURATION = 15;
+
+      if (failedAttempts >= MAX_ATTEMPTS) {
+        lockoutUntil = new Date(Date.now() + LOCKOUT_DURATION * 60 * 1000);
+      }
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: failedAttempts,
+          lockoutUntil,
+        },
+      });
+
+      throw InvalidCredentialsException();
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: 0, lockoutUntil: null },
+    });
+
+    const knownSession = await prisma.session.findFirst({
+      where: { userId: user.id, userAgent, ipAddress: ip },
+    });
+
+    if (!knownSession) {
+      await sendEmail({
+        to: (await prisma.user.findUnique({ where: { id: user.id } }))!.email,
+        subject: "Security Alert: New Login Detected",
+        text: `Hi,
+      We detected a login to your account from a new device or location.
+      
+      Details:
+      IP Address: ${ip}
+      Device/Browser: ${userAgent}
+      
+      If this was you, no action is needed.
+      If you did NOT authorize this login, please reset your password immediately and review your account's active sessions.
+      
+      Stay safe,
+      Auth Forge Security Team`,
+        html: `<p>Hi,</p>
+      <p>We detected a login to your account from a new device or location.</p>
+      <p><strong>Details:</strong><br>
+      IP Address: ${ip}<br>
+      Device/Browser: ${userAgent}</p>
+      <p>If this was you, no action is needed.<br>
+      If you did NOT authorize this login, please <a href="https://yourapp.com/reset-password">reset your password</a> immediately and review your account's active sessions.</p>
+      <p>Stay safe,<br>Auth Forge Security Team</p>`,
+      });
     }
 
     return generateTokens(user.id, userAgent, ip);
