@@ -1,15 +1,12 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { ProfileService } from "~/services";
 import {
-  UpdateProfileAdminRequest,
-  DeleteUserRequest,
   DeleteUserResponse,
   UpdateProfileResponse,
   RequestPasswordResetRequest,
   RequestPasswordResetResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
-  GetUserRequest,
   GetAccountResponse,
 } from "~/dtos";
 import { createLogger, ResponseCode } from "~/utils";
@@ -18,7 +15,7 @@ const logger = createLogger("ProfileController");
 
 export class ProfileController {
   static async updateProfile(
-    req: UpdateProfileAdminRequest,
+    req: Request,
     res: Response<UpdateProfileResponse>,
   ): Promise<void> {
     try {
@@ -49,7 +46,7 @@ export class ProfileController {
   }
 
   static async deleteUser(
-    req: DeleteUserRequest,
+    req: Request<{ id: string }>,
     res: Response<DeleteUserResponse>,
   ): Promise<void> {
     try {
@@ -108,7 +105,7 @@ export class ProfileController {
   }
 
   static async getUser(
-    req: GetUserRequest,
+    req: Request<{ id: string }>,
     res: Response<GetAccountResponse>,
   ): Promise<void> {
     try {

@@ -1,14 +1,12 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { PermissionService } from "~/services";
 import {
   AddPermissionRequest,
   AddPermissionResponse,
-  CheckPermissionRequest,
   CheckPermissionResponse,
   DeletePermissionRequest,
   DeletePermissionResponse,
   GetAllPermissionsResponse,
-  GetUserPermissionsRequest,
   GetUserPermissionsResponse,
   GrantPermissionRequest,
   GrantPermissionResponse,
@@ -18,10 +16,7 @@ import {
 import { ResponseCode } from "~/utils";
 
 export class PermissionController {
-  static async check(
-    req: CheckPermissionRequest,
-    res: Response<CheckPermissionResponse>,
-  ) {
+  static async check(req: Request, res: Response<CheckPermissionResponse>) {
     try {
       const { userId, permission } = req.query;
       const allowed = await PermissionService.checkPermission(
@@ -82,7 +77,7 @@ export class PermissionController {
   }
 
   static async getUserPermissions(
-    req: GetUserPermissionsRequest,
+    req: Request,
     res: Response<GetUserPermissionsResponse>,
   ) {
     try {

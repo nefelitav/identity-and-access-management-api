@@ -4,5 +4,8 @@ interface CaptchaVerificationRequestBody {
   token: string;
 }
 
-export type CaptchaVerificationRequest =
-  Request<CaptchaVerificationRequestBody>;
+export type CaptchaVerificationRequest = Request<
+  {},
+  {},
+  CaptchaVerificationRequestBody
+>;
