@@ -1,0 +1,284 @@
+name: CI/CD Pipeline
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "20"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Code Quality Checks
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint code
+        run: yarn lint
+
+      - name: Type check
+        run: yarn check-types
+
+      - name: Format check
+        run: yarn format --check
+
+      - name: Run tests
+        run: yarn test --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+
+  # Security Scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run npm audit
+        run: |
+          yarn audit --level moderate
+        continue-on-error: true
+
+  # Build and Test Docker Image
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [quality, security]
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Trivy image scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: "sarif"
+          output: "trivy-image-results.sarif"
+
+      - name: Upload Trivy image scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-image-results.sarif"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+
+      - name: Deploy to staging
+        run: |
+          # Update image tag in deployment
+          sed -i "s|image: identity-forge-api:latest|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop-${{ github.sha }}|g" k8s/api-deployment.yaml
+
+          # Apply Kubernetes manifests
+          kubectl apply -f k8s/postgres-deployment.yaml
+          kubectl apply -f k8s/redis-deployment.yaml
+          kubectl apply -f k8s/api-deployment.yaml
+
+          # Wait for deployment to be ready
+          kubectl rollout status deployment/identity-forge-api -n identity-forge --timeout=300s
+
+      - name: Run smoke tests
+        run: |
+          # Wait for service to be ready
+          kubectl wait --for=condition=ready pod -l app=identity-forge-api -n identity-forge --timeout=300s
+
+          # Get service URL
+          SERVICE_URL=$(kubectl get service identity-forge-api-service -n identity-forge -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+          # Run basic health checks
+          curl -f http://$SERVICE_URL/healthz || exit 1
+          curl -f http://$SERVICE_URL/readyz || exit 1
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
+
+      - name: Deploy to production
+        run: |
+          # Update image tag in deployment
+          sed -i "s|image: identity-forge-api:latest|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}|g" k8s/api-deployment.yaml
+
+          # Apply Kubernetes manifests
+          kubectl apply -f k8s/postgres-deployment.yaml
+          kubectl apply -f k8s/redis-deployment.yaml
+          kubectl apply -f k8s/api-deployment.yaml
+
+          # Wait for deployment to be ready
+          kubectl rollout status deployment/identity-forge-api -n identity-forge --timeout=300s
+
+      - name: Run production smoke tests
+        run: |
+          # Wait for service to be ready
+          kubectl wait --for=condition=ready pod -l app=identity-forge-api -n identity-forge --timeout=300s
+
+          # Get service URL
+          SERVICE_URL=$(kubectl get service identity-forge-api-service -n identity-forge -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+          # Run comprehensive health checks
+          curl -f http://$SERVICE_URL/healthz || exit 1
+          curl -f http://$SERVICE_URL/readyz || exit 1
+          curl -f http://$SERVICE_URL/docs || exit 1
+
+      - name: Notify deployment
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: "#deployments"
+          text: "Production deployment completed for Identity Forge API"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always()
+
+  # Database Migration
+  migrate:
+    name: Database Migration
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run database migrations
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            DATABASE_URL=${{ secrets.DATABASE_URL_PRODUCTION }} yarn prisma migrate deploy
+          else
+            DATABASE_URL=${{ secrets.DATABASE_URL_STAGING }} yarn prisma migrate deploy
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  # Documentation Generation
+  documentation:
+    name: Documentation Generation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate docs
+        working-directory: .
+        run: yarn run docs
