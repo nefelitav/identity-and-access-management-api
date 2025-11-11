@@ -10,99 +10,116 @@ import {
   GetRolesResponse,
   RemoveRoleRequest,
   RemoveRoleResponse,
-} from "~/dtos/rbac";
-import { ResponseCode } from "~/utils";
+} from "~/dtos";
+import { ResponseCode, createLogger } from "~/utils";
+import { BaseController } from "~/controllers";
 
-export class RbacController {
+const logger = createLogger("RbacController");
+
+export class RbacController extends BaseController {
   static async assignRole(
     req: AssignRoleRequest,
     res: Response<AssignRoleResponse>,
   ) {
-    try {
-      const { userId, role } = req.body;
-      await RbacService.assignRoleToUser(userId, role);
-      res.sendStatus(ResponseCode.OK);
-    } catch (err: any) {
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { userId, role } = req.body;
+        await RbacService.assignRoleToUser(userId, role);
+
+        logger.info(`Assigned role "${role}" to user: ${userId}`);
+        return { message: "Role assigned" };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async removeRole(
     req: RemoveRoleRequest,
     res: Response<RemoveRoleResponse>,
   ) {
-    try {
-      const { userId, role } = req.body;
-      await RbacService.removeRoleFromUser(userId, role);
-      res.sendStatus(ResponseCode.OK);
-    } catch (err: any) {
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { userId, role } = req.body;
+        await RbacService.removeRoleFromUser(userId, role);
+
+        logger.info(`Removed role "${role}" from user: ${userId}`);
+        return { message: "Role removed" };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async getRoles(
     req: Request<{ userId: string }>,
     res: Response<GetRolesResponse>,
   ) {
-    try {
-      const { userId } = req.params;
-      const roles = await RbacService.getUserRoles(userId);
-      res.status(ResponseCode.OK).json({ success: true, data: { roles } });
-    } catch (err: any) {
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { userId } = req.params;
+        const roles = await RbacService.getUserRoles(userId);
+
+        logger.info(
+          `Fetched roles for user: ${userId}. Count: ${roles.length}`,
+        );
+        return { roles };
+      },
+      ResponseCode.OK,
+    );
   }
 
-  static async getAllRoles(res: Response<GetAllRolesResponse>) {
-    try {
-      const roles = await RbacService.getAllRoles();
-      res.status(ResponseCode.OK).json({ success: true, data: { roles } });
-    } catch (err: any) {
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+  static async getAllRoles(req: Request, res: Response<GetAllRolesResponse>) {
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const roles = await RbacService.getAllRoles();
+
+        logger.info(`Fetched all roles. Count: ${roles.data.length}`);
+        return { roles };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async createRole(
     req: CreateRoleRequest,
     res: Response<CreateRoleResponse>,
   ) {
-    try {
-      const { name } = req.body;
-      const role = await RbacService.createRole(name);
-      res.status(ResponseCode.OK).json({ success: true, data: { role } });
-    } catch (err: any) {
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { name } = req.body;
+        const role = await RbacService.createRole(name);
+
+        logger.info(`Created new role: "${name}"`);
+        return { role };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async deleteRole(
     req: Request<{ name: string }>,
     res: Response<DeleteRoleResponse>,
   ) {
-    try {
-      const { name } = req.params;
-      await RbacService.deleteRole(name);
-      res.sendStatus(ResponseCode.OK);
-    } catch (err: any) {
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { name } = req.params;
+        await RbacService.deleteRole(name);
+
+        logger.info(`Deleted role: "${name}"`);
+        return { message: "Role deleted" };
+      },
+      ResponseCode.OK,
+    );
   }
 }

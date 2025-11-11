@@ -1,34 +1,41 @@
+import { container, SERVICE_IDENTIFIERS } from "~/core";
 import { PermissionsRepository } from "~/repositories/rbac";
 
 export class PermissionService {
+  private static get permissionsRepo() {
+    return container.get<PermissionsRepository>(
+      SERVICE_IDENTIFIERS.PermissionRepository,
+    );
+  }
+
   static async checkPermission(
     userId: string,
     permission: string,
   ): Promise<boolean> {
-    return PermissionsRepository.hasPermission(userId, permission);
+    return this.permissionsRepo.hasPermission(userId, permission);
   }
 
-  static async grantPermission(userId: string, permission: string) {
-    return PermissionsRepository.grantPermissionToRole(userId, permission);
+  static async grantPermission(roleId: string, permission: string) {
+    return this.permissionsRepo.grantPermissionToRole(roleId, permission);
   }
 
-  static async revokePermissionFromRole(userId: string, permission: string) {
-    return PermissionsRepository.revokePermissionFromRole(userId, permission);
+  static async revokePermissionFromRole(roleId: string, permission: string) {
+    return this.permissionsRepo.revokePermissionFromRole(roleId, permission);
   }
 
   static async getAllPermissions() {
-    return PermissionsRepository.getAllPermissions();
+    return this.permissionsRepo.getAllPermissions();
   }
 
   static async getUserPermissions(userId: string) {
-    return PermissionsRepository.getUserPermissions(userId);
+    return this.permissionsRepo.getUserPermissions(userId);
   }
 
   static async addPermission(name: string) {
-    return PermissionsRepository.createPermission(name);
+    return this.permissionsRepo.createPermission(name);
   }
 
   static async deletePermission(name: string) {
-    return PermissionsRepository.deletePermission(name);
+    return this.permissionsRepo.deletePermission(name);
   }
 }

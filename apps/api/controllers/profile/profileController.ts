@@ -9,115 +9,109 @@ import {
   ResetPasswordResponse,
   GetAccountResponse,
 } from "~/dtos";
-import { createLogger, ResponseCode } from "~/utils";
+import { ResponseCode, createLogger } from "~/utils";
+import { BaseController } from "~/controllers";
 
 const logger = createLogger("ProfileController");
 
-export class ProfileController {
+export class ProfileController extends BaseController {
   static async updateProfile(
     req: Request,
     res: Response<UpdateProfileResponse>,
   ): Promise<void> {
-    try {
-      const { email, password } = req.body;
-      const userId = req.user?.id;
-      const userAgent = req.headers["user-agent"];
-      const ip = req.ip;
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { email, password } = req.body;
+        const userId = req.user?.userId;
+        const userAgent = this.extractUserAgent(req);
+        const ip = this.extractIpAddress(req);
 
-      const updatedUser = await ProfileService.updateProfile({
-        userId,
-        email,
-        password,
-        userAgent,
-        ip,
-      });
+        const updatedUser = await ProfileService.updateProfile({
+          userId,
+          email,
+          password,
+          userAgent,
+          ip,
+        });
 
-      logger.info(`User profile updated successfully: ${email}`);
-
-      res.status(ResponseCode.OK).json({ success: true, data: updatedUser });
-    } catch (err: any) {
-      logger.error("Failed to update user profile", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+        logger.info(`User profile updated successfully: ${email}`);
+        return updatedUser;
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async deleteUser(
     req: Request<{ id: string }>,
     res: Response<DeleteUserResponse>,
   ): Promise<void> {
-    try {
-      const userId = req.user?.id;
-      await ProfileService.deleteUser(userId);
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const userId = req.user?.userId;
+        await ProfileService.deleteUser(userId);
 
-      res.sendStatus(ResponseCode.OK);
-    } catch (err: any) {
-      logger.error("Deletion of user failed", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+        logger.info(`Deleted user: ${userId}`);
+        return { message: "User deleted" };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async requestPasswordReset(
     req: RequestPasswordResetRequest,
     res: Response<RequestPasswordResetResponse>,
-  ) {
-    try {
-      const { email } = req.body;
-      await ProfileService.requestPasswordReset(email);
+  ): Promise<void> {
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { email } = req.body;
+        await ProfileService.requestPasswordReset(email);
 
-      logger.info(`Password reset request was sent successfully: ${email}`);
-
-      res.sendStatus(ResponseCode.OK);
-    } catch (err: any) {
-      logger.error("Password reset request failed", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+        logger.info(`Password reset requested for: ${email}`);
+        return { message: "Password reset request sent" };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async resetPassword(
     req: ResetPasswordRequest,
     res: Response<ResetPasswordResponse>,
-  ) {
-    try {
-      const { resetToken, newPassword } = req.body;
-      await ProfileService.resetPassword(resetToken, newPassword);
+  ): Promise<void> {
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { resetToken, newPassword } = req.body;
+        await ProfileService.resetPassword(resetToken, newPassword);
 
-      res.sendStatus(ResponseCode.OK);
-    } catch (err: any) {
-      logger.error("Password reset failed", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+        logger.info(`Password reset completed using token: ${resetToken}`);
+        return { message: "Password reset successfully" };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async getUser(
     req: Request<{ id: string }>,
     res: Response<GetAccountResponse>,
   ): Promise<void> {
-    try {
-      const userId = req.user?.id;
-      const user = await ProfileService.getUser(userId);
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const userId = req.user?.userId;
+        const user = await ProfileService.getUser(userId);
 
-      res.status(ResponseCode.OK).json({ success: true, data: user });
-    } catch (err: any) {
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+        logger.info(`Fetched user details for: ${userId}`);
+        return user;
+      },
+      ResponseCode.OK,
+    );
   }
 }

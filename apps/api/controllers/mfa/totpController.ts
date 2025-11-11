@@ -7,87 +7,96 @@ import {
   TotpVerifyRequest,
 } from "~/dtos";
 import { ResponseCode, createLogger } from "~/utils";
+import { BaseController } from "~/controllers";
+import { InvalidTotpTokenException } from "~/exceptions";
+
 const logger = createLogger("TotpController");
 
-export class TotpController {
+export class TotpController extends BaseController {
   static async enable(req: TotpEnableRequest, res: Response): Promise<void> {
-    try {
-      const { userId } = req.body;
-      const { secret, qrCode } = await TotpService.generateSecret(userId);
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const userId = req.user?.userId || req.body.userId;
+        if (!userId) {
+          throw new Error("User ID not found");
+        }
+        const { secret, qrCode } = await TotpService.generateSecret(userId);
 
-      logger.info(`TOTP secret generated for user: ${userId}`);
-      res
-        .status(ResponseCode.CREATED)
-        .json({ success: true, data: { secret, qrCode } });
-    } catch (err: any) {
-      logger.error("Failed to enable TOTP", err);
-      res
-        .status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR)
-        .json({ success: false, error: { message: err.message } });
-    }
+        logger.info(`TOTP secret generated for user: ${userId}`);
+        return { secret, qrCode };
+      },
+      ResponseCode.CREATED,
+    );
   }
 
   static async confirmAndEnable(
     req: TotpConfirmRequest,
     res: Response,
   ): Promise<void> {
-    try {
-      const { userId, token } = req.body;
-      const success = await TotpService.confirmAndEnable(userId, token);
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const userId = req.user?.userId || req.body.userId;
+        const { token } = req.body;
+        if (!userId) {
+          throw new Error("User ID not found");
+        }
+        const success = await TotpService.confirmAndEnable(userId, token);
 
-      if (success) {
+        if (!success) {
+          logger.warn(`Invalid TOTP token for user: ${userId}`);
+          throw InvalidTotpTokenException();
+        }
+
         logger.info(`TOTP confirmed and enabled for user: ${userId}`);
-        res.status(ResponseCode.OK).json({ success: true, data: { success } });
-      } else {
-        logger.warn(`Invalid TOTP token for user: ${userId}`);
-        res
-          .status(ResponseCode.BAD_REQUEST)
-          .json({ success: false, error: { message: "Invalid token" } });
-      }
-    } catch (err: any) {
-      logger.error("Failed to confirm TOTP enable", err);
-      res
-        .status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR)
-        .json({ success: false, error: { message: err.message } });
-    }
+        return { success };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async verify(req: TotpVerifyRequest, res: Response): Promise<void> {
-    try {
-      const { userId, token } = req.body;
-      const isValid = await TotpService.verifyCode(userId, token);
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const userId = req.user?.userId || req.body.userId;
+        const { token } = req.body;
+        if (!userId) {
+          throw new Error("User ID not found");
+        }
+        const isValid = await TotpService.verifyCode(userId, token);
 
-      if (isValid) {
+        if (!isValid) {
+          logger.warn(`TOTP verification failed for user: ${userId}`);
+          throw InvalidTotpTokenException();
+        }
+
         logger.info(`TOTP verification succeeded for user: ${userId}`);
-        res.status(ResponseCode.OK).json({ success: true, data: { isValid } });
-      } else {
-        logger.warn(`TOTP verification failed for user: ${userId}`);
-        res
-          .status(ResponseCode.BAD_REQUEST)
-          .json({ success: false, error: { message: "Invalid code" } });
-      }
-    } catch (err: any) {
-      logger.error("Failed to verify TOTP", err);
-      res
-        .status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR)
-        .json({ success: false, error: { message: err.message } });
-    }
+        return { isValid };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async disable(req: TotpDisableRequest, res: Response): Promise<void> {
-    try {
-      const { userId } = req.body;
-      await TotpService.disable(userId);
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const userId = req.user?.userId || req.body.userId;
+        if (!userId) {
+          throw new Error("User ID not found");
+        }
+        await TotpService.disable(userId);
 
-      logger.info(`TOTP disabled for user: ${userId}`);
-      res
-        .status(ResponseCode.OK)
-        .json({ success: true, data: { disabled: true } });
-    } catch (err: any) {
-      logger.error("Failed to disable TOTP", err);
-      res
-        .status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR)
-        .json({ success: false, error: { message: err.message } });
-    }
+        logger.info(`TOTP disabled for user: ${userId}`);
+        return { disabled: true };
+      },
+      ResponseCode.OK,
+    );
   }
 }

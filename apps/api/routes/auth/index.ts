@@ -1,1 +1,1 @@
-export * from "./authRoutes";
+export { default } from "./authRoutes";

@@ -1,5 +1,12 @@
 import express from "express";
 import { AuthController } from "~/controllers";
+import { validateRequest } from "~/middleware";
+import {
+  registerSchema,
+  loginSchema,
+  refreshTokenSchema,
+  logoutSchema,
+} from "~/validation/schemas";
 import {
   loginLimiter,
   logoutLimiter,
@@ -7,11 +14,34 @@ import {
   registerLimiter,
 } from "~/utils";
 
-const authRouter = express.Router();
+const authRoutes = express.Router();
 
-authRouter.post("/register", registerLimiter, AuthController.register);
-authRouter.post("/login", loginLimiter, AuthController.login);
-authRouter.post("/refresh-token", refreshLimiter, AuthController.refreshToken);
-authRouter.post("/logout", logoutLimiter, AuthController.logout);
+authRoutes.post(
+  "/register",
+  validateRequest(registerSchema),
+  registerLimiter,
+  AuthController.register,
+);
 
-export default authRouter;
+authRoutes.post(
+  "/login",
+  validateRequest(loginSchema),
+  loginLimiter,
+  AuthController.login,
+);
+
+authRoutes.post(
+  "/refresh-token",
+  validateRequest(refreshTokenSchema),
+  refreshLimiter,
+  AuthController.refreshToken,
+);
+
+authRoutes.post(
+  "/logout",
+  validateRequest(logoutSchema),
+  logoutLimiter,
+  AuthController.logout,
+);
+
+export default authRoutes;

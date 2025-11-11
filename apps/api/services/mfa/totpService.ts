@@ -1,3 +1,4 @@
+import { PrismaClient } from "@prisma/client";
 import * as speakeasy from "speakeasy";
 import * as qrcode from "qrcode";
 import redis from "~/utils/redis";
@@ -6,34 +7,42 @@ import { TotpRepository } from "~/repositories";
 const VERIFICATION_CODE_TTL = 300; // 5 minutes
 const MAX_ATTEMPTS = 5;
 
+const prisma = new PrismaClient();
+const totpRepository = new TotpRepository(prisma);
+
 export class TotpService {
   static async generateSecret(userId: string) {
+    // Generate a new TOTP secret for this user
     const secret = speakeasy.generateSecret({ name: `YourApp (${userId})` });
 
-    // Save secret but mark MFA as disabled until confirmed
-    await TotpRepository.createOrUpdateSecret(userId, secret.base32, false);
+    // Save secret in DB, MFA disabled until confirmed
+    await totpRepository.createOrUpdateSecret(userId, secret.base32, false);
 
+    // Generate QR code URL for authenticator apps
     const qrCode = await qrcode.toDataURL(secret.otpauth_url!);
+
     return { secret: secret.base32, qrCode };
   }
 
-  // Confirm first token after user sets up authenticator app
   static async confirmAndEnable(
     userId: string,
     token: string,
   ): Promise<boolean> {
-    const secretEntry = await TotpRepository.getSecretByUserId(userId);
+    // Get user's saved secret from DB
+    const secretEntry = await totpRepository.getSecretByUserId(userId);
     if (!secretEntry) return false;
 
+    // Verify the provided token against saved secret
     const isValid = speakeasy.totp.verify({
       secret: secretEntry.secret,
       encoding: "base32",
       token,
-      window: 1,
+      window: 1, // Allow 1 step before/after for clock skew
     });
 
     if (isValid) {
-      await TotpRepository.enableMfa(userId);
+      // Enable MFA in DB after first successful verification
+      await totpRepository.enableMfa(userId);
     }
 
     return isValid;
@@ -41,7 +50,7 @@ export class TotpService {
 
   static async verifyCode(userId: string, token: string): Promise<boolean> {
     const attemptsKey = `mfa_attempts:${userId}`;
-    const mfaSecret = await TotpRepository.getSecretByUserId(userId);
+    const mfaSecret = await totpRepository.getSecretByUserId(userId);
     if (!mfaSecret || !mfaSecret.enabled) return false;
 
     const attempts = Number(await redis.get(attemptsKey)) || 0;
@@ -55,9 +64,11 @@ export class TotpService {
     });
 
     if (isValid) {
+      // Reset attempt counter on success
       await redis.del(attemptsKey);
       return true;
     } else {
+      // Increment attempt counter on failure, with TTL
       await redis.setEx(
         attemptsKey,
         VERIFICATION_CODE_TTL,
@@ -68,6 +79,6 @@ export class TotpService {
   }
 
   static async disable(userId: string) {
-    await TotpRepository.disableMfa(userId);
+    await totpRepository.disableMfa(userId);
   }
 }

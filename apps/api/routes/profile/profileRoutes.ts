@@ -1,5 +1,5 @@
 import express from "express";
-import { ProfileController } from "~/controllers/profile";
+import { ProfileController } from "~/controllers";
 import { authMiddleware } from "~/middleware";
 import { passwordResetLimiter } from "~/utils";
 

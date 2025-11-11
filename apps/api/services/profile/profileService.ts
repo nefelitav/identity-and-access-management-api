@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
+import { container, SERVICE_IDENTIFIERS } from "~/core";
 import { UserRepository } from "~/repositories";
 import { UserNotFoundException } from "~/exceptions";
 import { SessionService } from "~/services";
@@ -15,21 +16,30 @@ export class ProfileService {
     ip,
   }: {
     userId?: string;
-    email: string;
-    password: string;
+    email?: string;
+    password?: string;
     userAgent?: string;
     ip?: string;
   }) {
-    if (!userId || !(await UserRepository.findById(userId))) {
+    if (!userId) {
       throw UserNotFoundException;
     }
 
-    const hashedPassword = await bcrypt.hash(password, SALT);
+    const userRepository = container.get<UserRepository>(
+      SERVICE_IDENTIFIERS.UserRepository,
+    );
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw UserNotFoundException;
+    }
 
-    const updatedUser = await UserRepository.update(userId, {
-      email,
-      password: hashedPassword,
-    });
+    const updateData: any = {};
+    if (email) updateData.email = email;
+    if (password) {
+      updateData.password = await bcrypt.hash(password, SALT);
+    }
+
+    const updatedUser = await userRepository.update(userId, updateData);
 
     const tokens = await generateTokens(updatedUser.id, userAgent, ip);
 
@@ -43,14 +53,19 @@ export class ProfileService {
   static async deleteUser(userId?: string) {
     if (!userId) throw UserNotFoundException;
 
-    const deleted = await UserRepository.delete(userId);
-    if (!deleted) throw UserNotFoundException;
+    const userRepository = container.get<UserRepository>(
+      SERVICE_IDENTIFIERS.UserRepository,
+    );
+    await userRepository.delete(userId);
 
     await SessionService.deleteAllSessions(userId);
   }
 
   static async requestPasswordReset(email: string) {
-    const user = await UserRepository.findByEmail(email);
+    const userRepository = container.get<UserRepository>(
+      SERVICE_IDENTIFIERS.UserRepository,
+    );
+    const user = await userRepository.findByEmail(email);
     if (!user) throw UserNotFoundException;
 
     const token = await ProfileService.generateResetToken(user.id);
@@ -67,9 +82,12 @@ export class ProfileService {
     const userId = await ProfileService.verifyResetToken(resetToken);
     if (!userId) throw UserNotFoundException;
 
+    const userRepository = container.get<UserRepository>(
+      SERVICE_IDENTIFIERS.UserRepository,
+    );
     const hashedPassword = await bcrypt.hash(newPassword, SALT);
 
-    await UserRepository.update(userId, {
+    await userRepository.update(userId, {
       password: hashedPassword,
     });
 
@@ -79,7 +97,10 @@ export class ProfileService {
   static async getUser(userId?: string) {
     if (!userId) throw UserNotFoundException;
 
-    const user = await UserRepository.findById(userId);
+    const userRepository = container.get<UserRepository>(
+      SERVICE_IDENTIFIERS.UserRepository,
+    );
+    const user = await userRepository.findById(userId);
     if (!user) throw UserNotFoundException;
 
     return user;

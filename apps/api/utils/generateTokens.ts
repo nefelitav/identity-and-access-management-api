@@ -1,7 +1,10 @@
 import { v4 as uuidv4 } from "uuid";
-import jwt from "jsonwebtoken";
-import { JWT_EXPIRY, JWT_SECRET } from "~/utils/constants";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { JWT_EXPIRY, JWT_SECRET } from "~/utils";
 import { SessionService } from "~/services";
+import { createLogger } from "~/utils";
+
+const logger = createLogger("TokenGenerator");
 
 export async function generateTokens(
   userId: string,
@@ -10,25 +13,45 @@ export async function generateTokens(
   remember = false,
 ) {
   const refreshToken = uuidv4();
-  const accessToken = jwt.sign(
-    { userId, sessionId: refreshToken },
-    JWT_SECRET!,
-    {
-      expiresIn: JWT_EXPIRY,
-    },
-  );
+
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not defined");
+  }
+
+  const payload: JwtPayload = {
+    userId,
+    sessionId: refreshToken,
+    sub: userId,
+    iss: "identity-forge-api",
+    aud: "identity-forge-client",
+    iat: Math.floor(Date.now() / 1000),
+  };
+
+  const accessToken = jwt.sign(payload, JWT_SECRET, {
+    expiresIn: JWT_EXPIRY,
+    algorithm: "HS256",
+  });
 
   const expiresIn = remember
     ? 30 * 24 * 60 * 60 // 30 days
     : 7 * 24 * 60 * 60; // 7 days
 
-  await SessionService.createSession(
-    userId,
-    refreshToken,
-    userAgent,
-    ip,
-    expiresIn,
-  );
+  try {
+    await SessionService.createSession(
+      userId,
+      refreshToken,
+      userAgent,
+      ip,
+      expiresIn,
+    );
 
-  return { accessToken, refreshToken };
+    logger.debug("Tokens generated successfully for " + userId);
+    return { accessToken, refreshToken };
+  } catch (error) {
+    logger.error(
+      "Failed to create session during token generation:",
+      error as Error,
+    );
+    throw error;
+  }
 }

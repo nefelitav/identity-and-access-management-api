@@ -1,6 +1,6 @@
 import { ApiResponse } from "~/dtos";
 
-export interface ListSessionsResponseData {
+interface ListSessionsResponseData {
   id: string;
   userId: string;
   userAgent?: string | null;

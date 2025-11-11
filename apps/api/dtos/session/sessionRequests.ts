@@ -1,16 +1,16 @@
 import { Request } from "express";
 
-export interface ListSessionsRequestBody {
+interface ListSessionsRequestBody {
   user: { id: string };
 }
 
-export interface DeleteSessionRequestBody {
+interface DeleteSessionRequestBody {
   params: {
     sessionId: string;
   };
   user: { id: string };
 }
-export interface DeleteAllSessionsRequestBody {
+interface DeleteAllSessionsRequestBody {
   user: { id: string };
   sessionId: string;
 }

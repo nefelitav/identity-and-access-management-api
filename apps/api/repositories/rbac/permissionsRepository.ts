@@ -1,18 +1,24 @@
-import { prisma } from "@repo/prisma";
+import { PrismaClient } from "@prisma/client";
 
 export class PermissionsRepository {
-  static async grantPermissionToRole(roleId: string, permissionName: string) {
-    let permission = await prisma.permission.findUnique({
+  private prisma: PrismaClient;
+
+  constructor(prisma: PrismaClient) {
+    this.prisma = prisma;
+  }
+
+  async grantPermissionToRole(roleId: string, permissionName: string) {
+    let permission = await this.prisma.permission.findUnique({
       where: { name: permissionName },
     });
 
     if (!permission) {
-      permission = await prisma.permission.create({
+      permission = await this.prisma.permission.create({
         data: { name: permissionName },
       });
     }
 
-    await prisma.rolePermission.upsert({
+    await this.prisma.rolePermission.upsert({
       where: {
         roleId_permissionId: {
           roleId,
@@ -27,17 +33,14 @@ export class PermissionsRepository {
     });
   }
 
-  static async revokePermissionFromRole(
-    roleId: string,
-    permissionName: string,
-  ) {
-    const permission = await prisma.permission.findUnique({
+  async revokePermissionFromRole(roleId: string, permissionName: string) {
+    const permission = await this.prisma.permission.findUnique({
       where: { name: permissionName },
     });
 
     if (!permission) return;
 
-    await prisma.rolePermission.deleteMany({
+    await this.prisma.rolePermission.deleteMany({
       where: {
         roleId,
         permissionId: permission.id,
@@ -45,17 +48,17 @@ export class PermissionsRepository {
     });
   }
 
-  static async hasPermission(
+  async hasPermission(
     userId: string,
     permissionName: string,
   ): Promise<boolean> {
-    const permission = await prisma.permission.findUnique({
+    const permission = await this.prisma.permission.findUnique({
       where: { name: permissionName },
     });
 
     if (!permission) return false;
 
-    const roleBased = await prisma.userRole.findFirst({
+    const roleBased = await this.prisma.userRole.findFirst({
       where: {
         userId,
         role: {
@@ -69,12 +72,12 @@ export class PermissionsRepository {
     return !!roleBased;
   }
 
-  static async getAllPermissions() {
-    return prisma.permission.findMany();
+  async getAllPermissions() {
+    return this.prisma.permission.findMany();
   }
 
-  static async getUserPermissions(userId: string) {
-    return prisma.role.findMany({
+  async getUserPermissions(userId: string) {
+    return this.prisma.role.findMany({
       where: {
         userRoles: { some: { userId } },
       },
@@ -86,14 +89,14 @@ export class PermissionsRepository {
     });
   }
 
-  static async createPermission(name: string) {
-    return prisma.permission.create({
+  async createPermission(name: string) {
+    return this.prisma.permission.create({
       data: { name },
     });
   }
 
-  static async deletePermission(name: string) {
-    return prisma.permission.delete({
+  async deletePermission(name: string) {
+    return this.prisma.permission.delete({
       where: { name },
     });
   }

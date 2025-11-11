@@ -1,18 +1,74 @@
-import { prisma } from "@repo/prisma";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { BaseRepository, FilterOptions } from "~/repositories";
 
-export class RbacRepository {
-  static async assignRoleToUser(userId: string, role: string) {
-    let existingRole = await prisma.role.findUnique({
-      where: { name: role },
+interface RoleCreateInput {
+  name: string;
+}
+
+interface RoleUpdateInput {
+  name?: string;
+}
+
+interface RbacFilters extends FilterOptions {
+  name?: string;
+}
+
+export class RbacRepository extends BaseRepository<
+  Prisma.RoleGetPayload<{}>,
+  RoleCreateInput,
+  RoleUpdateInput
+> {
+  constructor(prisma: PrismaClient) {
+    super(prisma, "role");
+  }
+
+  protected buildWhereClause(filters: RbacFilters): Prisma.RoleWhereInput {
+    const where: Prisma.RoleWhereInput = {};
+
+    if (filters.name) {
+      where.name = {
+        contains: filters.name,
+        mode: "insensitive",
+      };
+    }
+
+    if (filters.search) {
+      where.name = {
+        contains: filters.search,
+        mode: "insensitive",
+      };
+    }
+
+    return where;
+  }
+
+  protected buildOrderByClause(
+    sortBy?: string,
+    sortOrder: "asc" | "desc" = "asc",
+  ): Prisma.RoleOrderByWithRelationInput {
+    const orderBy: Prisma.RoleOrderByWithRelationInput = {};
+
+    switch (sortBy) {
+      case "name":
+        orderBy.name = sortOrder;
+        break;
+      default:
+        orderBy.name = "asc";
+    }
+
+    return orderBy;
+  }
+
+  async assignRoleToUser(userId: string, roleName: string) {
+    let existingRole = await this.prisma.role.findUnique({
+      where: { name: roleName },
     });
 
     if (!existingRole) {
-      existingRole = await prisma.role.create({
-        data: { name: role },
-      });
+      existingRole = await this.create({ name: roleName });
     }
 
-    return prisma.userRole.create({
+    return this.prisma.userRole.create({
       data: {
         userId,
         roleId: existingRole.id,
@@ -20,14 +76,14 @@ export class RbacRepository {
     });
   }
 
-  static async removeRoleFromUser(userId: string, role: string) {
-    const existingRole = await prisma.role.findUnique({
-      where: { name: role },
+  async removeRoleFromUser(userId: string, roleName: string) {
+    const existingRole = await this.prisma.role.findUnique({
+      where: { name: roleName },
     });
 
-    if (!existingRole) return;
+    if (!existingRole) return null;
 
-    return prisma.userRole.delete({
+    return this.prisma.userRole.delete({
       where: {
         userId_roleId: {
           userId,
@@ -37,40 +93,40 @@ export class RbacRepository {
     });
   }
 
-  static async getUserRoles(userId: string) {
-    return prisma.userRole.findMany({
+  async getUserRoles(userId: string) {
+    return this.prisma.userRole.findMany({
       where: { userId },
       include: { role: true },
     });
   }
 
-  static async getAllRoles() {
-    return prisma.role.findMany();
+  async getAllRoles() {
+    return this.findMany({ limit: 1000 }); // Arbitrary large limit
   }
 
-  static async createRole(name: string) {
-    return prisma.role.create({
-      data: { name },
-    });
-  }
-
-  static async deleteRole(name: string) {
-    const existingRole = await prisma.role.findUnique({
+  async deleteRole(name: string) {
+    const existingRole = await this.prisma.role.findUnique({
       where: { name },
     });
 
-    if (!existingRole) return;
+    if (!existingRole) return null;
 
-    await prisma.userRole.deleteMany({
+    await this.prisma.userRole.deleteMany({
       where: { roleId: existingRole.id },
     });
 
-    await prisma.rolePermission.deleteMany({
+    await this.prisma.rolePermission.deleteMany({
       where: { roleId: existingRole.id },
     });
 
-    return prisma.role.delete({
+    return this.prisma.role.delete({
       where: { id: existingRole.id },
+    });
+  }
+
+  async createRole(name: string) {
+    return this.prisma.role.create({
+      data: { name },
     });
   }
 }

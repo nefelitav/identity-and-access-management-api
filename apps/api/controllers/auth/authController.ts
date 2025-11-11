@@ -1,56 +1,56 @@
 import { Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { AuthService } from "~/services";
+import { BaseController } from "~/controllers";
 import {
-  RegisterRequest,
   LoginRequest,
-  RefreshTokenRequest,
-  LogoutRequest,
   LoginResponse,
+  LogoutRequest,
   LogoutResponse,
+  RefreshTokenRequest,
   RefreshTokenResponse,
+  RegisterRequest,
   RegisterResponse,
 } from "~/dtos";
-import { ResponseCode, JWT_SECRET, createLogger } from "~/utils";
+import { createLogger, JWT_SECRET, ResponseCode } from "~/utils";
 
 const logger = createLogger("AuthController");
 
-export class AuthController {
+export class AuthController extends BaseController {
   static async register(
     req: RegisterRequest,
     res: Response<RegisterResponse>,
   ): Promise<void> {
-    try {
-      const { email, password } = req.body;
-      const userAgent = req.headers["user-agent"];
-      const ip = req.ip;
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { email, password } = req.body;
+        const userAgent = this.extractUserAgent(req);
+        const ip = this.extractIpAddress(req);
 
-      const result = await AuthService.register({
-        email,
-        password,
-        userAgent,
-        ip,
-      });
-      logger.info(`User registered successfully: ${email}`);
-      res.status(ResponseCode.CREATED).json({ success: true, data: result });
-    } catch (err: any) {
-      logger.error("Registration failed", err);
+        const result = await AuthService.register({
+          email,
+          password,
+          userAgent,
+          ip,
+        });
 
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+        logger.info(`User registered successfully: ${email}`);
+        return result;
+      },
+      ResponseCode.CREATED,
+    );
   }
 
   static async login(
     req: LoginRequest,
     res: Response<LoginResponse>,
   ): Promise<void> {
-    try {
+    await this.handleRequest(req, res, async () => {
       const { email, password, remember } = req.body;
-      const userAgent = req.headers["user-agent"];
-      const ip = req.ip;
+      const userAgent = this.extractUserAgent(req);
+      const ip = this.extractIpAddress(req);
 
       const tokens = await AuthService.login({
         email,
@@ -59,23 +59,17 @@ export class AuthController {
         ip,
         remember,
       });
-      logger.info(`User logged in successfully: ${email}`);
-      res.status(ResponseCode.OK).json({ success: true, data: tokens });
-    } catch (err: any) {
-      logger.error("Login failed", err);
 
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+      logger.info(`User logged in successfully: ${email}`);
+      return tokens;
+    });
   }
 
   static async logout(
     req: LogoutRequest,
     res: Response<LogoutResponse>,
   ): Promise<void> {
-    try {
+    await this.handleRequest(req, res, async () => {
       const authHeader = req.headers.authorization;
 
       if (authHeader) {
@@ -85,29 +79,16 @@ export class AuthController {
 
         await AuthService.logout({ sessionId, userId });
       }
-
-      res.sendStatus(ResponseCode.OK);
-    } catch (err: any) {
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+    });
   }
 
   static async refreshToken(
     req: RefreshTokenRequest,
     res: Response<RefreshTokenResponse>,
   ): Promise<void> {
-    try {
+    await this.handleRequest(req, res, async () => {
       const { refreshToken } = req.body;
-      const tokens = await AuthService.refreshToken(refreshToken);
-      res.status(ResponseCode.OK).json({ success: true, data: tokens });
-    } catch (err: any) {
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+      return await AuthService.refreshToken(refreshToken);
+    });
   }
 }
