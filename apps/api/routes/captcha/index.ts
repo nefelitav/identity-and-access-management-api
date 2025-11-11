@@ -1,1 +1,1 @@
-export * from "./captchaRoutes";
+export { default } from "./captchaRoutes";

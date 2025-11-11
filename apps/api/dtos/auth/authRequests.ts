@@ -1,21 +1,21 @@
 import { Request } from "express";
 
-export interface RegisterRequestBody {
+interface RegisterRequestBody {
   email: string;
   password: string;
 }
 
-export interface LoginRequestBody {
+interface LoginRequestBody {
   email: string;
   password: string;
   remember?: boolean;
 }
 
-export interface RefreshRequestBody {
+interface RefreshRequestBody {
   refreshToken: string;
 }
 
-export interface LogoutRequestBody {}
+interface LogoutRequestBody {}
 
 export type RegisterRequest = Request<{}, {}, RegisterRequestBody>;
 export type LoginRequest = Request<{}, {}, LoginRequestBody>;

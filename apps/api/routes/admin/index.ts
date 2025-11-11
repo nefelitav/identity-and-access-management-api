@@ -1,1 +1,1 @@
-export * from "./adminRoutes";
+export { default } from "./adminRoutes";

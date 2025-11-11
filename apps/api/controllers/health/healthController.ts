@@ -1,10 +1,10 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import redisClient from "~/utils/redis";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function healthCheck(res: Response) {
+export async function healthCheck(_req: Request, res: Response) {
   res.status(200).json({
     success: true,
     data: {
@@ -16,7 +16,7 @@ export async function healthCheck(res: Response) {
   });
 }
 
-export async function readinessCheck(res: Response) {
+export async function readinessCheck(_req: Request, res: Response) {
   const checks = {
     database: false,
     redis: false,

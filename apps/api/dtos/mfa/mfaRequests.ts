@@ -1,20 +1,20 @@
 import { Request } from "express";
 
-export interface TotpEnableRequestBody {
+interface TotpEnableRequestBody {
   userId: string;
 }
 
-export interface TotpConfirmRequestBody {
-  userId: string;
-  token: string;
-}
-
-export interface TotpVerifyRequestBody {
+interface TotpConfirmRequestBody {
   userId: string;
   token: string;
 }
 
-export interface TotpDisableRequestBody {
+interface TotpVerifyRequestBody {
+  userId: string;
+  token: string;
+}
+
+interface TotpDisableRequestBody {
   userId: string;
 }
 
@@ -23,17 +23,17 @@ export type TotpConfirmRequest = Request<{}, {}, TotpConfirmRequestBody>;
 export type TotpVerifyRequest = Request<{}, {}, TotpVerifyRequestBody>;
 export type TotpDisableRequest = Request<{}, {}, TotpDisableRequestBody>;
 
-export interface OtpInEmailRequestBody {
+interface OtpInEmailRequestBody {
   userId: string;
   email: string;
 }
 
-export interface OtpInSmsRequestBody {
+interface OtpInSmsRequestBody {
   userId: string;
   phone: string;
 }
 
-export interface OtpVerifyRequestBody {
+interface OtpVerifyRequestBody {
   userId: string;
   code: string;
 }

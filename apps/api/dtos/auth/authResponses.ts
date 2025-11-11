@@ -1,6 +1,6 @@
 import { ApiResponse } from "~/dtos";
 
-export interface RegisterResponseData {
+interface RegisterResponseData {
   id: string;
   email: string;
   createdAt: string;
@@ -8,12 +8,12 @@ export interface RegisterResponseData {
   refreshToken: string;
 }
 
-export interface LoginResponseData {
+interface LoginResponseData {
   accessToken: string;
   refreshToken: string;
 }
 
-export interface RefreshResponseData {
+interface RefreshResponseData {
   accessToken: string;
 }
 

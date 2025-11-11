@@ -1,10 +1,10 @@
+export { default as createLogger } from "./createLogger";
 export * from "./redis";
 export * from "./responseCode";
 export * from "./constants";
 export * from "./sendEmail";
 export * from "./sendSms";
 export * from "./generateTokens";
-export * from "./createLogger";
 export * from "./createException";
 export * from "./hashToken";
 export * from "./rateLimiting";

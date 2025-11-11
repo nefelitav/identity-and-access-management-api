@@ -1,53 +1,77 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  app:
-    image: node:20
-    container_name: app
-    working_dir: /app
-    volumes:
-      - .:/app
-      - /app/node_modules
-    ports:
-      - "3000:3000"
-    command: sh -c "yarn install && npx prisma generate --schema=./packages/prisma/prisma/schema.prisma && npx prisma db push --schema=./packages/prisma/prisma/schema.prisma && yarn build && yarn dev"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    environment:
-      NODE_ENV: development
-      DATABASE_URL: "postgresql://user:password@postgres:5432/auth?schema=public"
-      REDIS_URL: redis://redis:6379
-    networks:
-      - auth-net
-
-  redis:
-    image: redis:alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-    networks:
-      - auth-net
-
+  # Database
   postgres:
-    image: postgres:15
-    container_name: postgres
+    image: postgres:15-alpine
+    container_name: identity-forge-postgres
+    environment:
+      POSTGRES_DB: identity_forge
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_DB: auth
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts:/docker-entrypoint-initdb.d/
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d auth" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - auth-net
+      - identity-forge-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: identity-forge-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass redis_password
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - identity-forge-network
+
+  # API Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: identity-forge-api
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/identity_forge
+      REDIS_URL: redis://:redis_password@redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-at-least-32-characters-long
+      SESSION_SECRET: your-super-secret-session-key-at-least-32-characters-long
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - /app/node_modules
+    networks:
+      - identity-forge-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
 
 networks:
-  auth-net:
+  identity-forge-network:
     driver: bridge

@@ -5,26 +5,25 @@ import {
 } from "~/dtos";
 import { CaptchaService } from "~/services";
 import { createLogger, ResponseCode } from "~/utils";
+import { BaseController } from "~/controllers";
 
 const logger = createLogger("CaptchaController");
 
-export class CaptchaController {
+export class CaptchaController extends BaseController {
   static async verify(
     req: CaptchaVerificationRequest,
     res: Response<CaptchaVerificationResponse>,
   ): Promise<void> {
-    try {
-      const { token } = req.body;
-      const result = await CaptchaService.verify(token);
-      logger.info(`Captcha verified successfully.`);
-      res.status(ResponseCode.OK).json({ success: true, data: result });
-    } catch (err: any) {
-      logger.error("Failed to verify captcha", err);
-
-      res.status(err.statusCode).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { token } = req.body;
+        const result = await CaptchaService.verify(token);
+        logger.info("Captcha verified successfully.");
+        return result;
+      },
+      ResponseCode.OK,
+    );
   }
 }

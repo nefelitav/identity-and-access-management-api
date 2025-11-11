@@ -1,5 +1,6 @@
-export const JWT_SECRET = process.env.JWT_SECRET;
-export const JWT_EXPIRY = "15m";
-export const REFRESH_EXPIRY = 60 * 60 * 24 * 7; // 7 days
+import { config } from "~/config";
+import { Secret } from "jsonwebtoken";
+
+export const JWT_SECRET: Secret = process.env.JWT_SECRET || "jwt-secret";
+export const JWT_EXPIRY = config.JWT_EXPIRY;
 export const SALT = 10;
-export const CAPTCHA_SECRET = process.env.RECAPTCHA_SECRET_KEY!;

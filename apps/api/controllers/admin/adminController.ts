@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { AdminService, ProfileService } from "~/services";
+import { BaseController } from "~/controllers";
 import {
   DeleteUserResponse,
   UpdateProfileResponse,
@@ -7,92 +8,82 @@ import {
   DeleteUsersResponse,
   GetUserResponse,
 } from "~/dtos";
-import { createLogger, ResponseCode } from "~/utils";
+import { createLogger } from "~/utils";
 
 const logger = createLogger("AdminController");
 
-export class AdminController {
+export class AdminController extends BaseController {
   static async getUser(
     req: Request,
     res: Response<GetUserResponse>,
   ): Promise<void> {
-    try {
+    await this.handleRequest(req, res, async () => {
       const userId = req.params.id;
       const user = await ProfileService.getUser(userId);
 
-      logger.info(`Fetched user with ID: ${userId} `);
-      res.status(ResponseCode.OK).json({ success: true, data: user });
-    } catch (err: any) {
-      logger.error("Fetching user failed", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+      logger.info(`Fetched user with ID: ${userId}`);
+      return user;
+    });
   }
 
-  static async getUsers(res: Response<GetUsersResponse>): Promise<void> {
-    try {
-      const users = await AdminService.getUsers();
+  static async getUsers(
+    req: Request,
+    res: Response<GetUsersResponse>,
+  ): Promise<void> {
+    await this.handleRequest(req, res, async () => {
+      const {
+        page = 1,
+        limit = 10,
+        search,
+        role,
+        sortBy,
+        sortOrder,
+      } = req.query;
 
-      logger.info(`Fetched ${users.length} users`);
-      res.status(ResponseCode.OK).json({ success: true, data: users });
-    } catch (err: any) {
-      logger.error("Fetching users failed", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
+      const users = await AdminService.getUsers({
+        page: Number(page),
+        limit: Number(limit),
+        search: search as string,
+        role: role as string,
+        sortBy: sortBy as string,
+        sortOrder: sortOrder as "asc" | "desc",
       });
-    }
+
+      logger.info(`Fetched ${users.data.length} users (page ${page})`);
+      return users;
+    });
   }
 
-  static async deleteUsers(res: Response<DeleteUsersResponse>): Promise<void> {
-    try {
+  static async deleteUsers(
+    req: Request,
+    res: Response<DeleteUsersResponse>,
+  ): Promise<void> {
+    await this.handleRequest(req, res, async () => {
       await AdminService.deleteUsers();
-
-      logger.info(`Deleted all users`);
-      res.sendStatus(ResponseCode.OK);
-    } catch (err: any) {
-      logger.error("Deleting users failed", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+      logger.info("Deleted all users");
+    });
   }
 
   static async deleteUser(
     req: Request,
     res: Response<DeleteUserResponse>,
   ): Promise<void> {
-    try {
+    await this.handleRequest(req, res, async () => {
       const userId = req.params.id;
       await ProfileService.deleteUser(userId);
-
       logger.info(`Deleted user with ID: ${userId}`);
-      res.sendStatus(ResponseCode.OK);
-    } catch (err: any) {
-      logger.error("Deleting user failed", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+    });
   }
 
   static async updateProfile(
     req: Request,
     res: Response<UpdateProfileResponse>,
   ): Promise<void> {
-    try {
+    await this.handleRequest(req, res, async () => {
       const { email, password } = req.body;
       const userId = req.params.id;
-      const userAgent = req.headers["user-agent"];
-      const ip = req.ip;
+      const userAgent = this.extractUserAgent(req);
+      const ip = this.extractIpAddress(req);
 
       const updatedUser = await ProfileService.updateProfile({
         userId,
@@ -103,15 +94,7 @@ export class AdminController {
       });
 
       logger.info(`Admin updated profile for user with ID: ${userId}`);
-
-      res.status(ResponseCode.OK).json({ success: true, data: updatedUser });
-    } catch (err: any) {
-      logger.error("Admin profile update failed", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+      return updatedUser;
+    });
   }
 }

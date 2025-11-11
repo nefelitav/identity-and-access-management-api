@@ -1,9 +1,15 @@
+import { UserNotFoundException } from "~/exceptions";
 import { hashToken } from "~/utils";
 import { v4 as uuidv4 } from "uuid";
-import { sessionRepository } from "~/repositories";
-import { UserNotFoundException } from "~/exceptions";
+import { SessionRepository } from "~/repositories";
+import { container, SERVICE_IDENTIFIERS } from "~/core";
 
 export class SessionService {
+  private static get sessionRepository() {
+    return container.get<SessionRepository>(
+      SERVICE_IDENTIFIERS.SessionRepository,
+    );
+  }
   static async createSession(
     userId: string,
     refreshToken: string,
@@ -13,7 +19,7 @@ export class SessionService {
   ) {
     const hashedToken = hashToken(refreshToken);
 
-    return await sessionRepository.create({
+    return await this.sessionRepository.create({
       id: uuidv4(),
       userId,
       refreshToken: hashedToken,
@@ -25,25 +31,25 @@ export class SessionService {
 
   static async getSessionByToken(refreshToken: string) {
     const hashedToken = hashToken(refreshToken);
-    return await sessionRepository.findByToken(hashedToken);
+    return await this.sessionRepository.findByToken(hashedToken);
   }
 
   static async getSessions(userId?: string) {
     if (!userId) throw UserNotFoundException;
-    return await sessionRepository.findAll(userId);
+    return await this.sessionRepository.findAll(userId);
   }
 
   static async deleteSession(sessionId: string) {
-    return await sessionRepository.delete(sessionId);
+    return await this.sessionRepository.delete(sessionId);
   }
 
   static async deleteAllSessions(userId?: string) {
     if (!userId) throw UserNotFoundException;
 
-    return await sessionRepository.deleteAll(userId);
+    return await this.sessionRepository.deleteAll(userId);
   }
 
   static async updateLastActive(sessionId: string) {
-    return await sessionRepository.updateLastActive(sessionId);
+    return await this.sessionRepository.updateLastActive(sessionId);
   }
 }

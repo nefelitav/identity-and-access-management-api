@@ -1,20 +1,20 @@
 import { ApiResponse } from "~/dtos";
 
-export interface TotpEnableResponseData {
+interface TotpEnableResponseData {
   secret: string;
   qrCode: string;
 }
 
-export interface TotpConfirmResponseData {
+interface TotpConfirmResponseData {
   success: boolean;
   error?: string;
 }
 
-export interface TotpVerifyResponseData {
+interface TotpVerifyResponseData {
   success: boolean;
 }
 
-export interface TotpDisableResponseData {
+interface TotpDisableResponseData {
   success: boolean;
 }
 
@@ -23,15 +23,15 @@ export type TotpConfirmResponse = ApiResponse<TotpConfirmResponseData>;
 export type TotpVerifyResponse = ApiResponse<TotpVerifyResponseData>;
 export type TotpDisableResponse = ApiResponse<TotpDisableResponseData>;
 
-export interface OtpInEmailResponseData {
+interface OtpInEmailResponseData {
   message: string;
 }
 
-export interface OtpInSmsResponseData {
+interface OtpInSmsResponseData {
   message: string;
 }
 
-export interface OtpVerifyResponseData {
+interface OtpVerifyResponseData {
   success: boolean;
 }
 

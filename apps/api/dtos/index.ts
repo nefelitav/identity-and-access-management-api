@@ -5,3 +5,4 @@ export * from "./auth";
 export * from "./session";
 export * from "./captcha";
 export * from "./mfa";
+export * from "./rbac";

@@ -2,62 +2,59 @@ import { Response } from "express";
 import { OtpService } from "~/services";
 import { OtpInEmailRequest, OtpInSmsRequest, OtpVerifyRequest } from "~/dtos";
 import { ResponseCode, createLogger } from "~/utils";
-const logger = createLogger("TotpController");
+import { BaseController } from "~/controllers";
+import { InvalidOtpTokenException } from "~/exceptions";
 
-export class OtpController {
+const logger = createLogger("OtpController");
+
+export class OtpController extends BaseController {
   static async requestCodeInEmail(req: OtpInEmailRequest, res: Response) {
-    try {
-      const { userId, email } = req.body;
-      await OtpService.generateAndSendCodeViaEmail(userId, email);
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { userId, email } = req.body;
+        await OtpService.generateAndSendCodeViaEmail(userId, email);
 
-      logger.info(`OTP email code sent to ${email} for user: ${userId}`);
-      res
-        .status(ResponseCode.OK)
-        .json({ success: true, data: { message: "Verification code sent" } });
-    } catch (err: any) {
-      logger.error("Failed to send OTP email code", err);
-      res
-        .status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR)
-        .json({ success: false, error: { message: err.message } });
-    }
+        logger.info(`OTP email code sent to ${email} for user: ${userId}`);
+        return { message: "Verification code sent" };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async requestCodeInSms(req: OtpInSmsRequest, res: Response) {
-    try {
-      const { userId, phone } = req.body;
-      await OtpService.generateAndSendCodeViaSms(userId, phone);
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { userId, phone } = req.body;
+        await OtpService.generateAndSendCodeViaSms(userId, phone);
 
-      logger.info(`OTP SMS code sent to ${phone} for user: ${userId}`);
-      res
-        .status(ResponseCode.OK)
-        .json({ success: true, data: { message: "Verification code sent" } });
-    } catch (err: any) {
-      logger.error("Failed to send OTP SMS code", err);
-      res
-        .status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR)
-        .json({ success: false, error: { message: err.message } });
-    }
+        logger.info(`OTP SMS code sent to ${phone} for user: ${userId}`);
+        return { message: "Verification code sent" };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async verifyCode(req: OtpVerifyRequest, res: Response) {
-    try {
-      const { userId, code } = req.body;
-      const isValid = await OtpService.verifyCode(userId, code);
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { userId, code } = req.body;
+        const isValid = await OtpService.verifyCode(userId, code);
 
-      if (isValid) {
+        if (!isValid) {
+          logger.warn(`OTP verification failed for user: ${userId}`);
+          throw InvalidOtpTokenException();
+        }
+
         logger.info(`OTP verification succeeded for user: ${userId}`);
-        res.status(ResponseCode.OK).json({ success: true, data: { isValid } });
-      } else {
-        logger.warn(`OTP verification failed for user: ${userId}`);
-        res
-          .status(ResponseCode.BAD_REQUEST)
-          .json({ success: false, error: { message: "Invalid code" } });
-      }
-    } catch (err: any) {
-      logger.error("Failed to verify OTP code", err);
-      res
-        .status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR)
-        .json({ success: false, error: { message: err.message } });
-    }
+        return { isValid };
+      },
+      ResponseCode.OK,
+    );
   }
 }

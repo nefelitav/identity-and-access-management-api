@@ -8,81 +8,73 @@ import {
   DeleteAllSessionsRequest,
   DeleteAllSessionsResponse,
 } from "~/dtos";
-import { createLogger, ResponseCode } from "~/utils";
+import { ResponseCode, createLogger } from "~/utils";
+import { BaseController } from "~/controllers";
 
 const logger = createLogger("SessionController");
 
-export class SessionController {
+export class SessionController extends BaseController {
   static async listSessions(
     req: ListSessionsRequest,
     res: Response<ListSessionsResponse>,
   ) {
-    try {
-      const userId = req.user?.id;
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const userId = req.user?.userId;
+        const sessions = await SessionService.getSessions(userId);
 
-      const sessions = await SessionService.getSessions(userId);
-      logger.info(`Fetched ${sessions.length} sessions.`);
+        logger.info(`Fetched ${sessions.length} sessions for user: ${userId}`);
 
-      res.status(ResponseCode.OK).json({
-        success: true,
-        data: sessions.map((session) => ({
-          id: session.id,
-          userId: session.userId,
-          userAgent: session.userAgent,
-          ip: session.ipAddress,
-          createdAt: session.createdAt.toISOString(),
-          lastActiveAt: session.lastActiveAt.toISOString(),
-        })),
-      });
-    } catch (err: any) {
-      logger.error("Fetching sessions failed", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+        return {
+          sessions: sessions.map((session) => ({
+            id: session.id,
+            userId: session.userId,
+            userAgent: session.userAgent,
+            ip: session.ipAddress,
+            createdAt: session.createdAt.toISOString(),
+            lastActiveAt: session.lastActiveAt.toISOString(),
+          })),
+        };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async deleteSession(
     req: DeleteSessionRequest,
     res: Response<DeleteSessionResponse>,
   ) {
-    try {
-      const { sessionId } = req.body.params;
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const { sessionId } = req.body.params;
+        await SessionService.deleteSession(sessionId);
 
-      await SessionService.deleteSession(sessionId);
-      logger.info(`Deleted session.`);
-
-      res.sendStatus(ResponseCode.OK);
-    } catch (err: any) {
-      logger.error("Deleting session failed", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+        logger.info(`Deleted session with ID: ${sessionId}`);
+        return { message: "Session deleted" };
+      },
+      ResponseCode.OK,
+    );
   }
 
   static async deleteAllSessions(
     req: DeleteAllSessionsRequest,
     res: Response<DeleteAllSessionsResponse>,
   ) {
-    try {
-      const userId = req.user?.id;
+    await this.handleRequest(
+      req,
+      res,
+      async () => {
+        const userId = req.user?.userId;
+        await SessionService.deleteAllSessions(userId);
 
-      await SessionService.deleteAllSessions(userId);
-      logger.info(`Deleted all sessions.`);
-
-      res.sendStatus(ResponseCode.OK);
-    } catch (err: any) {
-      logger.error("Deleting sessions failed", err);
-
-      res.status(err.statusCode ?? ResponseCode.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: { message: err.message },
-      });
-    }
+        logger.info(`Deleted all sessions for user: ${userId}`);
+        return { message: "All sessions deleted" };
+      },
+      ResponseCode.OK,
+    );
   }
 }
