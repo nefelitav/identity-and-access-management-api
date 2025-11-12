@@ -1,0 +1,221 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: identity-forge
+  labels:
+    name: identity-forge
+    app: identity-forge
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-forge-config
+  namespace: identity-forge
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  JWT_EXPIRY: "15m"
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "100"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: identity-forge-secrets
+  namespace: identity-forge
+type: Opaque
+stringData:
+  DATABASE_URL: "postgresql://postgres:password@postgres-service:5432/identity_forge"
+  REDIS_URL: "redis://redis-service:6379"
+  JWT_SECRET: "your-super-secret-jwt-key-at-least-32-characters-long"
+  SESSION_SECRET: "your-super-secret-session-key-at-least-32-characters-long"
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_USER: "your-email@gmail.com"
+  SMTP_PASS: "your-app-password"
+  SMTP_FROM: "noreply@yourdomain.com"
+  TWILIO_ACCOUNT_SID: "your-twilio-account-sid"
+  TWILIO_AUTH_TOKEN: "your-twilio-auth-token"
+  TWILIO_PHONE_NUMBER: "+1234567890"
+  RECAPTCHA_SECRET_KEY: "your-recaptcha-secret-key"
+  RECAPTCHA_SITE_KEY: "your-recaptcha-site-key"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-forge-api
+  namespace: identity-forge
+  labels:
+    app: identity-forge-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: identity-forge-api
+  template:
+    metadata:
+      labels:
+        app: identity-forge-api
+    spec:
+      containers:
+        - name: api
+          image: identity-forge-api:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: identity-forge-config
+                  key: NODE_ENV
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: identity-forge-config
+                  key: PORT
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: REDIS_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: JWT_SECRET
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: SESSION_SECRET
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: SMTP_HOST
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: SMTP_PORT
+            - name: SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: SMTP_USER
+            - name: SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: SMTP_PASS
+            - name: SMTP_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: SMTP_FROM
+            - name: TWILIO_ACCOUNT_SID
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: TWILIO_ACCOUNT_SID
+            - name: TWILIO_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: TWILIO_AUTH_TOKEN
+            - name: TWILIO_PHONE_NUMBER
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: TWILIO_PHONE_NUMBER
+            - name: RECAPTCHA_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: RECAPTCHA_SECRET_KEY
+            - name: RECAPTCHA_SITE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: identity-forge-secrets
+                  key: RECAPTCHA_SITE_KEY
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-forge-api-service
+  namespace: identity-forge
+  labels:
+    app: identity-forge-api
+spec:
+  selector:
+    app: identity-forge-api
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: identity-forge-ingress
+  namespace: identity-forge
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts:
+        - api.identityforge.com
+      secretName: identity-forge-tls
+  rules:
+    - host: api.identityforge.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: identity-forge-api-service
+                port:
+                  number: 80
