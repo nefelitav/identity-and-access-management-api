@@ -56,8 +56,9 @@ export const SERVICE_IDENTIFIERS = {
   // Repositories
   UserRepository: new ServiceIdentifier("UserRepository"),
   SessionRepository: new ServiceIdentifier("SessionRepository"),
-  RoleRepository: new ServiceIdentifier("RoleRepository"),
+  RbacRepository: new ServiceIdentifier("RbacRepository"),
   PermissionRepository: new ServiceIdentifier("PermissionRepository"),
+  TotpRepository: new ServiceIdentifier("TotpRepository"),
 
   // Services
   AuthService: new ServiceIdentifier("AuthService"),

@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { createLogger } from "~/utils";
 
 const logger = createLogger("BaseRepository");
@@ -41,10 +41,9 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
 
   async findById(id: string): Promise<T | null> {
     try {
-      const result = await (this.prisma as any)[this.modelName].findUnique({
+      return await (this.prisma as any)[this.modelName].findUnique({
         where: { id },
       });
-      return result;
     } catch (error) {
       logger.error(
         `Error finding ${this.modelName} by ID: ${id}`,
@@ -108,10 +107,9 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
 
   async create(data: CreateInput): Promise<T> {
     try {
-      const result = await (this.prisma as any)[this.modelName].create({
+      return await (this.prisma as any)[this.modelName].create({
         data,
       });
-      return result;
     } catch (error) {
       logger.error(`Error creating ${this.modelName}`, error as Error);
       throw error;
@@ -120,11 +118,10 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
 
   async update(id: string, data: UpdateInput): Promise<T> {
     try {
-      const result = await (this.prisma as any)[this.modelName].update({
+      return await (this.prisma as any)[this.modelName].update({
         where: { id },
         data,
       });
-      return result;
     } catch (error) {
       logger.error(
         `Error updating ${this.modelName} with ID: ${id}`,
@@ -136,10 +133,9 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
 
   async delete(id: string): Promise<T> {
     try {
-      const result = await (this.prisma as any)[this.modelName].delete({
+      return await (this.prisma as any)[this.modelName].delete({
         where: { id },
       });
-      return result;
     } catch (error) {
       logger.error(
         `Error deleting ${this.modelName} with ID: ${id}`,

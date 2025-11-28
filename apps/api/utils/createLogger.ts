@@ -17,16 +17,24 @@ export default function createLogger(context?: string): Logger {
     return meta ? ` | metadata: ${JSON.stringify(meta)}` : "";
   };
 
+  const isTest = process.env.NODE_ENV === "test";
+
   return {
-    info: (msg: string, meta?: Record<string, unknown>) =>
-      console.info(formatMessage("info", msg) + formatMeta(meta)),
-    warn: (msg: string, meta?: Record<string, unknown>) =>
-      console.warn(formatMessage("warn", msg) + formatMeta(meta)),
+    info: (msg: string, meta?: Record<string, unknown>) => {
+      if (isTest) return;
+      console.info(formatMessage("info", msg) + formatMeta(meta));
+    },
+    warn: (msg: string, meta?: Record<string, unknown>) => {
+      if (isTest) return;
+      console.warn(formatMessage("warn", msg) + formatMeta(meta));
+    },
     error: (msg: string, error?: Error, meta?: Record<string, unknown>) => {
+      if (isTest) return;
       console.error(formatMessage("error", msg) + formatMeta(meta));
       if (error) console.error(error.stack);
     },
     debug: (msg: string, meta?: Record<string, unknown>) => {
+      if (isTest) return;
       if (process.env.NODE_ENV === "development") {
         console.debug(formatMessage("debug", msg) + formatMeta(meta));
       }
