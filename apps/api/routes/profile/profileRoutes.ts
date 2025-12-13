@@ -20,4 +20,5 @@ profileRouter.post(
 profileRouter.get("/", authMiddleware, ProfileController.getUser);
 profileRouter.put("/", authMiddleware, ProfileController.updateProfile);
 profileRouter.delete("/", authMiddleware, ProfileController.deleteUser);
-export default profileRouter;
+
+export { profileRouter };

@@ -82,7 +82,6 @@ export class CaptchaService {
     return result.success && (result.score || 0) >= minScore;
   }
 
-  // Static method for convenience
   static async verify(
     token: string,
     remoteIp?: string,

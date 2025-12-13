@@ -1,6 +1,10 @@
-export * from "./profile";
-export * from "./admin";
-export * from "./session";
-export * from "./captcha";
-export * from "./mfa";
-export * from "./auth";
+export { adminRouter } from "./admin";
+export { profileRouter } from "./profile";
+export { sessionRouter } from "./session";
+export { captchaRouter } from "./captcha";
+export { otpRouter } from "./mfa";
+export { totpRouter } from "./mfa";
+export { authRouter } from "./auth";
+export { rbacRouter } from "./rbac";
+export { permissionRouter } from "./rbac";
+export { healthRouter } from "./health";

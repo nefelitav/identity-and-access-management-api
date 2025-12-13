@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { AppError } from "~/middleware";
 import { createLogger, ResponseCode } from "~/utils";
 
 const logger = createLogger("BaseController");
@@ -14,14 +13,12 @@ export abstract class BaseController {
     try {
       const result = await handler();
 
-      // If the handler returns data (non-null, non-undefined)
       if (result !== undefined && result !== null) {
         res.status(successCode).json({
           success: true,
           data: result,
         });
       } else {
-        // For void-returning handlers
         res.sendStatus(successCode);
       }
     } catch (error) {
@@ -29,16 +26,12 @@ export abstract class BaseController {
         `Request failed for ${req.method} ${req.path}`,
         error as Error,
       );
+      if (error instanceof Error) {
+        const typedError = error as { statusCode?: number; message?: string };
 
-      if (error instanceof AppError) {
-        res.status(error.statusCode).json({
+        res.status(typedError.statusCode ?? 500).json({
           success: false,
-          error: { message: error.message },
-        });
-      } else {
-        res.status(ResponseCode.INTERNAL_SERVER_ERROR).json({
-          success: false,
-          error: { message: "Internal server error" },
+          error: { message: typedError.message },
         });
       }
     }

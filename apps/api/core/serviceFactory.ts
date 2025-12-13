@@ -26,7 +26,9 @@ export class ServiceFactory {
       return;
     }
 
-    this.registerInfrastructure();
+    if (!container.isBound(SERVICE_IDENTIFIERS.DatabaseClient)) {
+      this.registerInfrastructure();
+    }
     this.registerRepositories();
     this.registerServices();
     this.registerExternalServices();
