@@ -72,12 +72,26 @@ export class AuthController extends BaseController {
     await this.handleRequest(req, res, async () => {
       const authHeader = req.headers.authorization;
 
-      if (authHeader) {
+      if (!authHeader) {
+        res.status(401).json({
+          success: false,
+          error: { message: "Unauthorized: no token provided" },
+        });
+        return;
+      }
+
+      try {
         const token = authHeader.split(" ")[1];
         const payload = jwt.verify(token, JWT_SECRET!) as JwtPayload;
         const { sessionId, userId } = payload;
 
         await AuthService.logout({ sessionId, userId });
+        res.status(200).json({ success: true, data: null });
+      } catch (err) {
+        res.status(401).json({
+          success: false,
+          error: { message: "Unauthorized: invalid token" },
+        });
       }
     });
   }

@@ -14,34 +14,34 @@ import {
   registerLimiter,
 } from "~/utils";
 
-const authRoutes = express.Router();
+const authRouter = express.Router();
 
-authRoutes.post(
+authRouter.post(
   "/register",
   validateRequest(registerSchema),
   registerLimiter,
-  AuthController.register,
+  (req, res) => AuthController.register(req, res),
 );
 
-authRoutes.post(
+authRouter.post(
   "/login",
   validateRequest(loginSchema),
   loginLimiter,
-  AuthController.login,
+  (req, res) => AuthController.login(req, res),
 );
 
-authRoutes.post(
+authRouter.post(
   "/refresh-token",
   validateRequest(refreshTokenSchema),
   refreshLimiter,
-  AuthController.refreshToken,
+  (req, res) => AuthController.refreshToken(req, res),
 );
 
-authRoutes.post(
+authRouter.post(
   "/logout",
   validateRequest(logoutSchema),
   logoutLimiter,
-  AuthController.logout,
+  (req, res) => AuthController.logout(req, res),
 );
 
-export default authRoutes;
+export { authRouter };
