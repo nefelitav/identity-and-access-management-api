@@ -13,14 +13,12 @@ export abstract class BaseController {
     try {
       const result = await handler();
 
-      // If the handler returns data (non-null, non-undefined)
       if (result !== undefined && result !== null) {
         res.status(successCode).json({
           success: true,
           data: result,
         });
       } else {
-        // For void-returning handlers
         res.sendStatus(successCode);
       }
     } catch (error) {
