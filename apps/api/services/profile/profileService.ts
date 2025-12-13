@@ -22,7 +22,7 @@ export class ProfileService {
     ip?: string;
   }) {
     if (!userId) {
-      throw UserNotFoundException;
+      throw UserNotFoundException();
     }
 
     const userRepository = container.get<UserRepository>(
@@ -30,7 +30,7 @@ export class ProfileService {
     );
     const user = await userRepository.findById(userId);
     if (!user) {
-      throw UserNotFoundException;
+      throw UserNotFoundException();
     }
 
     const updateData: any = {};
@@ -51,7 +51,7 @@ export class ProfileService {
   }
 
   static async deleteUser(userId?: string) {
-    if (!userId) throw UserNotFoundException;
+    if (!userId) throw UserNotFoundException();
 
     const userRepository = container.get<UserRepository>(
       SERVICE_IDENTIFIERS.UserRepository,
@@ -66,7 +66,7 @@ export class ProfileService {
       SERVICE_IDENTIFIERS.UserRepository,
     );
     const user = await userRepository.findByEmail(email);
-    if (!user) throw UserNotFoundException;
+    if (!user) throw UserNotFoundException();
 
     const token = await ProfileService.generateResetToken(user.id);
     const resetUrl = `https://yourfrontend.com/reset-password?token=${token}`;
@@ -80,7 +80,7 @@ export class ProfileService {
 
   static async resetPassword(resetToken: string, newPassword: string) {
     const userId = await ProfileService.verifyResetToken(resetToken);
-    if (!userId) throw UserNotFoundException;
+    if (!userId) throw UserNotFoundException();
 
     const userRepository = container.get<UserRepository>(
       SERVICE_IDENTIFIERS.UserRepository,
@@ -95,13 +95,13 @@ export class ProfileService {
   }
 
   static async getUser(userId?: string) {
-    if (!userId) throw UserNotFoundException;
+    if (!userId) throw UserNotFoundException();
 
     const userRepository = container.get<UserRepository>(
       SERVICE_IDENTIFIERS.UserRepository,
     );
     const user = await userRepository.findById(userId);
-    if (!user) throw UserNotFoundException;
+    if (!user) throw UserNotFoundException();
 
     return user;
   }

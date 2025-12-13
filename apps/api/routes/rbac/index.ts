@@ -1,2 +1,2 @@
-export * from "./permissionRoutes";
-export * from "./rbacRoutes";
+export { permissionRouter } from "./permissionRoutes";
+export { rbacRouter } from "./rbacRoutes";

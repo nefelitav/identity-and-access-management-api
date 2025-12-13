@@ -30,4 +30,4 @@ totpRouter.post(
   TotpController.disable,
 );
 
-export default totpRouter;
+export { totpRouter };

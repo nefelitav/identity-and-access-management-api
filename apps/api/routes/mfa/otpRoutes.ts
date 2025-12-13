@@ -16,4 +16,4 @@ otpRouter.post(
 );
 otpRouter.post("/verify", otpVerifyLimiter, OtpController.verifyCode);
 
-export default otpRouter;
+export { otpRouter };

@@ -48,4 +48,4 @@ permissionRouter.get(
   PermissionController.getUserPermissions,
 );
 
-export default permissionRouter;
+export { permissionRouter };
