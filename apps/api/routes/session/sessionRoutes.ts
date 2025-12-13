@@ -24,4 +24,4 @@ sessionRouter.delete(
   SessionController.deleteAllSessions,
 );
 
-export default sessionRouter;
+export { sessionRouter };

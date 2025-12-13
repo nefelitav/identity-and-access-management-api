@@ -2,7 +2,9 @@ import "module-alias/register";
 import "dotenv/config";
 import app from "./app";
 import redisClient from "./utils/redis";
-
+import dotenv from "dotenv";
+const envFile = process.env.NODE_ENV === "development" ? ".env.dev" : ".env";
+dotenv.config({ path: envFile });
 const PORT = Number(process.env.PORT) || 3000;
 
 app.listen(PORT, "0.0.0.0", async () => {

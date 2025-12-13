@@ -42,4 +42,4 @@ adminRouter.delete(
 
 adminRouter.delete("/users", adminWriteLimiter, AdminController.deleteUsers);
 
-export default adminRouter;
+export { adminRouter };

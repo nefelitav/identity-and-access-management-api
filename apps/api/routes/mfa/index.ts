@@ -1,2 +1,2 @@
-export * from "./otpRoutes";
-export * from "./totpRoutes";
+export { otpRouter } from "./otpRoutes";
+export { totpRouter } from "./totpRoutes";

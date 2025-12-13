@@ -5,9 +5,9 @@ import { UserRepository } from "~/repositories";
 import {
   EmailAlreadyInUseException,
   InvalidCredentialsException,
-  InvalidRefreshTokenException,
   UserNotFoundException,
   AccountLockedException,
+  InvalidRefreshTokenException,
 } from "~/exceptions";
 import { SessionService } from "~/services";
 import {
@@ -17,9 +17,6 @@ import {
   SALT,
   sendEmail,
 } from "~/utils";
-import { createLogger } from "~/utils";
-
-const logger = createLogger("AuthService");
 
 export class AuthService {
   static async register({
@@ -48,7 +45,6 @@ export class AuthService {
 
       const tokens = await generateTokens(user.id, userAgent, ip);
 
-      logger.info(`User registered successfully: ${email}`);
       return {
         id: user.id,
         email: user.email,
@@ -104,10 +100,8 @@ export class AuthService {
         throw InvalidCredentialsException();
       }
 
-      // Reset failed attempts on successful login
       await userRepository.resetFailedAttempts(user.id);
 
-      // Check for new device/location
       const knownSession = await tx.session.findFirst({
         where: { userId: user.id, userAgent, ipAddress: ip },
       });
@@ -117,25 +111,25 @@ export class AuthService {
           to: user.email,
           subject: "Security Alert: New Login Detected",
           text: `Hi,
-We detected a login to your account from a new device or location.
-
-Details:
-IP Address: ${ip}
-Device/Browser: ${userAgent}
-
-If this was you, no action is needed.
-If you did NOT authorize this login, please reset your password immediately and review your account's active sessions.
-
-Stay safe,
-Auth Forge Security Team`,
+            We detected a login to your account from a new device or location.
+            
+            Details:
+            IP Address: ${ip}
+            Device/Browser: ${userAgent}
+            
+            If this was you, no action is needed.
+            If you did NOT authorize this login, please reset your password immediately and review your account's active sessions.
+            
+            Stay safe,
+            Auth Forge Security Team`,
           html: `<p>Hi,</p>
-<p>We detected a login to your account from a new device or location.</p>
-<p><strong>Details:</strong><br>
-IP Address: ${ip}<br>
-Device/Browser: ${userAgent}</p>
-<p>If this was you, no action is needed.<br>
-If you did NOT authorize this login, please <a href="https://yourapp.com/reset-password">reset your password</a> immediately and review your account's active sessions.</p>
-<p>Stay safe,<br>Auth Forge Security Team</p>`,
+            <p>We detected a login to your account from a new device or location.</p>
+            <p><strong>Details:</strong><br>
+            IP Address: ${ip}<br>
+            Device/Browser: ${userAgent}</p>
+            <p>If this was you, no action is needed.<br>
+            If you did NOT authorize this login, please <a href="https://yourapp.com/reset-password">reset your password</a> immediately and review your account's active sessions.</p>
+            <p>Stay safe,<br>Auth Forge Security Team</p>`,
         });
       }
 
@@ -151,31 +145,27 @@ If you did NOT authorize this login, please <a href="https://yourapp.com/reset-p
     userId?: string;
   }) {
     if (!sessionId && !userId) {
-      throw UserNotFoundException;
+      throw UserNotFoundException();
     }
 
     if (sessionId) {
-      await SessionService.deleteSession(sessionId);
+      try {
+        await SessionService.deleteSession(sessionId);
+      } catch (error) {
+        throw error;
+      }
     } else if (userId) {
       await SessionService.deleteAllSessions(userId);
     }
   }
 
   static async refreshToken(refreshToken: string) {
-    let payload: { userId: string; [key: string]: any };
-    try {
-      payload = jwt.verify(refreshToken, JWT_SECRET!) as { userId: string };
-    } catch {
-      throw InvalidRefreshTokenException;
-    }
-
     const session = await SessionService.getSessionByToken(refreshToken);
-    if (!session) {
-      throw InvalidRefreshTokenException;
-    }
+    if (!session) throw InvalidRefreshTokenException();
+    const payload = { userId: session.userId };
 
     if (session.expiresAt.getTime() < Date.now()) {
-      throw InvalidRefreshTokenException;
+      throw InvalidRefreshTokenException();
     }
 
     await SessionService.updateLastActive(session.id);

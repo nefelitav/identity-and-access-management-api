@@ -30,6 +30,13 @@ export class Container {
     });
   }
 
+  isBound(identifier: ServiceIdentifier): boolean {
+    return (
+      this.services.has(identifier.serviceIdentifier) ||
+      this.factories.has(identifier.serviceIdentifier)
+    );
+  }
+
   get<T>(identifier: ServiceIdentifier): T {
     // Check for direct service binding
     if (this.services.has(identifier.serviceIdentifier)) {
@@ -56,8 +63,9 @@ export const SERVICE_IDENTIFIERS = {
   // Repositories
   UserRepository: new ServiceIdentifier("UserRepository"),
   SessionRepository: new ServiceIdentifier("SessionRepository"),
-  RoleRepository: new ServiceIdentifier("RoleRepository"),
+  RbacRepository: new ServiceIdentifier("RbacRepository"),
   PermissionRepository: new ServiceIdentifier("PermissionRepository"),
+  TotpRepository: new ServiceIdentifier("TotpRepository"),
 
   // Services
   AuthService: new ServiceIdentifier("AuthService"),

@@ -6,4 +6,4 @@ const captchaRouter = Router();
 
 captchaRouter.post("/verify", captchaLimiter, CaptchaController.verify);
 
-export default captchaRouter;
+export { captchaRouter };

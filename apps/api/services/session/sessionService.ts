@@ -35,16 +35,20 @@ export class SessionService {
   }
 
   static async getSessions(userId?: string) {
-    if (!userId) throw UserNotFoundException;
+    if (!userId) throw UserNotFoundException();
     return await this.sessionRepository.findAll(userId);
   }
 
   static async deleteSession(sessionId: string) {
+    const session = await this.sessionRepository.findById(sessionId);
+    if (!session) {
+      return;
+    }
     return await this.sessionRepository.delete(sessionId);
   }
 
   static async deleteAllSessions(userId?: string) {
-    if (!userId) throw UserNotFoundException;
+    if (!userId) throw UserNotFoundException();
 
     return await this.sessionRepository.deleteAll(userId);
   }

@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for production optimization
-FROM node:20-alpine AS base
+FROM node:20.19-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -35,6 +35,11 @@ RUN adduser --system --uid 1001 nextjs
 
 # Copy built application
 COPY --from=builder /app/.env ./.env
+COPY --from=builder /app/jest.config.ts ./jest.config.ts
+COPY --from=builder /app/babel.config.ts ./babel.config.ts
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/apps/api/tsconfig.json ./apps/api/tsconfig.json
+COPY --from=builder /app/.env.dev ./.env.dev
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/apps ./apps
 COPY --from=builder /app/node_modules ./node_modules

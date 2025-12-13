@@ -1,1 +1,1 @@
-export * from "./sessionRoutes";
+export { sessionRouter } from "./sessionRoutes";

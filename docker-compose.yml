@@ -40,6 +40,17 @@ services:
     networks:
       - identity-forge-network
 
+  # Mailhog
+  mailhog:
+    image: mailhog/mailhog
+    container_name: identity-forge-mailhog
+    ports:
+      - "1025:1025"  # SMTP server port
+      - "8025:8025"  # Web UI port
+    networks:
+      - identity-forge-network
+    restart: unless-stopped
+
   # API Application
   api:
     build:
@@ -53,6 +64,10 @@ services:
       REDIS_URL: redis://:redis_password@redis:6379
       JWT_SECRET: your-super-secret-jwt-key-at-least-32-characters-long
       SESSION_SECRET: your-super-secret-session-key-at-least-32-characters-long
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_USER: user
+      SMTP_PASS: password
     ports:
       - "3000:3000"
     depends_on:

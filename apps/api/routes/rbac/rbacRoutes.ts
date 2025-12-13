@@ -42,4 +42,4 @@ rbacRouter.post(
   RbacController.createRole,
 );
 
-export default rbacRouter;
+export { rbacRouter };
