@@ -1,4 +1,6 @@
-# Register
+# Test Cases
+
+## Register
 
 | Feature  | Test Case               | Expected Result                     | Notes                                       |
 | -------- | ----------------------- | ----------------------------------- | ------------------------------------------- |
@@ -9,7 +11,7 @@
 | Register | Successful registration | Tokens generated                    | `generateTokens` mocked                     |
 | Register | Successful registration | Proper response returned            | Includes `id`, `email`, `createdAt`, tokens |
 
-# Login
+## Login
 
 | Feature | Test Case                | Expected Result                           | Notes                          |
 | ------- | ------------------------ | ----------------------------------------- | ------------------------------ |
@@ -24,7 +26,7 @@
 | Login   | Known device/IP          | No email sent                             | `sendEmail` NOT called         |
 | Login   | “Remember me” login      | Long-lived refresh token                  | Check token expiry params      |
 
-# Logout
+## Logout
 
 | Feature | Test Case              | Expected Result                | Notes                             |
 | ------- | ---------------------- | ------------------------------ | --------------------------------- |
@@ -33,7 +35,7 @@
 | Logout  | Logout by userId       | Deletes all sessions of user   | Use `deleteAllSessions`           |
 | Logout  | Multiple logout calls  | No errors (idempotent)         | Should not break or double-delete |
 
-# Refresh Token
+## Refresh Token
 
 | Feature | Test Case           | Expected Result                 | Notes                                     |
 | ------- | ------------------- | ------------------------------- | ----------------------------------------- |

@@ -19,9 +19,15 @@ export class CaptchaController extends BaseController {
       res,
       async () => {
         const { token } = req.body;
-        const result = await CaptchaService.verify(token);
+
+        const captchaService = new CaptchaService(logger);
+        const result = await captchaService.verifyCaptcha(token, req.ip);
+
         logger.info("Captcha verified successfully.");
-        return result;
+        return {
+          success: result.success,
+          score: result.score,
+        };
       },
       ResponseCode.OK,
     );

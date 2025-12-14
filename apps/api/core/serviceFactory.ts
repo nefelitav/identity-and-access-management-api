@@ -1,11 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { container, SERVICE_IDENTIFIERS } from "~/core";
 import { UserRepository } from "~/repositories";
-import { EmailService } from "~/services";
-import { SmsService } from "~/services";
 import { CaptchaService } from "~/services";
-import { CacheService } from "~/services";
-import { InMemoryEventBus, InMemoryEventStore } from "~/core";
 import { createLogger } from "~/utils";
 
 export class ServiceFactory {
@@ -55,24 +51,6 @@ export class ServiceFactory {
     container.bindSingleton(SERVICE_IDENTIFIERS.Logger, () => {
       return createLogger("Application");
     });
-
-    // Event System
-    container.bindSingleton(SERVICE_IDENTIFIERS.EventBus, () => {
-      return new InMemoryEventBus();
-    });
-
-    container.bindSingleton(SERVICE_IDENTIFIERS.EventStore, () => {
-      return new InMemoryEventStore();
-    });
-
-    // Cache Service
-    container.bindFactory(SERVICE_IDENTIFIERS.CacheService, () => {
-      const redisClient = container.get<any>(SERVICE_IDENTIFIERS.RedisClient);
-      const logger = container.get<any>(SERVICE_IDENTIFIERS.Logger);
-      const { RedisCacheStrategy } = require("~/services");
-      const strategy = new RedisCacheStrategy(redisClient, logger);
-      return new CacheService(strategy, logger);
-    });
   }
 
   private registerRepositories(): void {
@@ -84,28 +62,15 @@ export class ServiceFactory {
     });
   }
 
-  private registerServices(): void {
-    // Services are used statically, so no DI registration needed
-  }
+  private registerServices(): void {}
 
   private registerExternalServices(): void {
-    container.bindFactory(SERVICE_IDENTIFIERS.EmailService, () => {
-      return new EmailService();
-    });
-
-    container.bindFactory(SERVICE_IDENTIFIERS.SmsService, () => {
-      return new SmsService();
-    });
-
     container.bindFactory(SERVICE_IDENTIFIERS.CaptchaService, () => {
       return new CaptchaService();
     });
   }
 
-  private registerApplicationServices(): void {
-    // Event handlers are registered in app.ts
-  }
+  private registerApplicationServices(): void {}
 }
 
-// Initialize the factory
 export const serviceFactory = ServiceFactory.getInstance();

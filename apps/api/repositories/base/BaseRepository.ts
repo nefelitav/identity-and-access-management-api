@@ -66,13 +66,10 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
     const skip = (page - 1) * limit;
 
     try {
-      // Build where clause
       const where = this.buildWhereClause(filters);
 
-      // Build orderBy clause
       const orderBy = this.buildOrderByClause(sortBy, sortOrder);
 
-      // Execute queries in parallel
       const [data, total] = await Promise.all([
         (this.prisma as any)[this.modelName].findMany({
           where,
@@ -145,32 +142,6 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
     }
   }
 
-  async exists(id: string): Promise<boolean> {
-    try {
-      const count = await (this.prisma as any)[this.modelName].count({
-        where: { id },
-      });
-      return count > 0;
-    } catch (error) {
-      logger.error(
-        `Error checking existence of ${this.modelName} with ID: ${id}`,
-        error as Error,
-      );
-      throw error;
-    }
-  }
-
-  async count(filters: FilterOptions = {}): Promise<number> {
-    try {
-      const where = this.buildWhereClause(filters);
-      return await (this.prisma as any)[this.modelName].count({ where });
-    } catch (error) {
-      logger.error(`Error counting ${this.modelName}`, error as Error);
-      throw error;
-    }
-  }
-
-  // Abstract methods to be implemented by subclasses
   protected abstract buildWhereClause(filters: FilterOptions): any;
   protected abstract buildOrderByClause(
     sortBy?: string,

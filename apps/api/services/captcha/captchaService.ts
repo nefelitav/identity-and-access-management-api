@@ -67,27 +67,4 @@ export class CaptchaService {
       throw CaptchaVerificationFailedException();
     }
   }
-
-  async verifyCaptchaV2(token: string, remoteIp?: string): Promise<boolean> {
-    const result = await this.verifyCaptcha(token, remoteIp);
-    return result.success;
-  }
-
-  async verifyCaptchaV3(
-    token: string,
-    remoteIp?: string,
-    minScore: number = 0.5,
-  ): Promise<boolean> {
-    const result = await this.verifyCaptcha(token, remoteIp);
-    return result.success && (result.score || 0) >= minScore;
-  }
-
-  static async verify(
-    token: string,
-    remoteIp?: string,
-  ): Promise<{ success: boolean; score?: number }> {
-    const instance = new CaptchaService();
-    const result = await instance.verifyCaptcha(token, remoteIp);
-    return { success: result.success, score: result.score };
-  }
 }
