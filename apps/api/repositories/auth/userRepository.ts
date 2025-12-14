@@ -67,45 +67,6 @@ export class UserRepository extends BaseRepository<
     return !!user;
   }
 
-  async findWithRoles(id: string) {
-    return await this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        userRoles: {
-          include: {
-            role: {
-              include: {
-                rolePermissions: {
-                  include: {
-                    permission: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  async findWithSessions(id: string) {
-    return await this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        sessions: {
-          select: {
-            id: true,
-            userAgent: true,
-            ipAddress: true,
-            createdAt: true,
-            lastActiveAt: true,
-            expiresAt: true,
-          },
-        },
-      },
-    });
-  }
-
   async updateFailedAttempts(
     id: string,
     attempts: number,
@@ -126,33 +87,6 @@ export class UserRepository extends BaseRepository<
       data: {
         failedLoginAttempts: 0,
         lockoutUntil: null,
-      },
-    });
-  }
-
-  async findLockedUsers() {
-    return await this.prisma.user.findMany({
-      where: {
-        lockoutUntil: {
-          gt: new Date(),
-        },
-      },
-      select: {
-        id: true,
-        email: true,
-        lockoutUntil: true,
-        failedLoginAttempts: true,
-      },
-    });
-  }
-
-  async deleteExpiredSessions(userId: string) {
-    return await this.prisma.session.deleteMany({
-      where: {
-        userId,
-        expiresAt: {
-          lt: new Date(),
-        },
       },
     });
   }

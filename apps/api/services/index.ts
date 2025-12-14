@@ -4,5 +4,4 @@ export * from "./auth";
 export * from "./session";
 export * from "./rbac";
 export * from "./mfa";
-export * from "./infrastructure";
-export * from "./external";
+export * from "./captcha";

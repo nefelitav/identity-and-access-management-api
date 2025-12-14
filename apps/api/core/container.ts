@@ -1,5 +1,3 @@
-// Dependency Injection Container
-
 export class ServiceIdentifier {
   public readonly serviceIdentifier: symbol;
 
@@ -55,10 +53,8 @@ export class Container {
   }
 }
 
-// Global container instance
 export const container = new Container();
 
-// Service identifiers
 export const SERVICE_IDENTIFIERS = {
   // Repositories
   UserRepository: new ServiceIdentifier("UserRepository"),
@@ -67,7 +63,6 @@ export const SERVICE_IDENTIFIERS = {
   PermissionRepository: new ServiceIdentifier("PermissionRepository"),
   TotpRepository: new ServiceIdentifier("TotpRepository"),
 
-  // Services
   AuthService: new ServiceIdentifier("AuthService"),
   SessionService: new ServiceIdentifier("SessionService"),
   RbacService: new ServiceIdentifier("RbacService"),
@@ -77,18 +72,9 @@ export const SERVICE_IDENTIFIERS = {
   AdminService: new ServiceIdentifier("AdminService"),
   ProfileService: new ServiceIdentifier("ProfileService"),
 
-  // External Services
-  EmailService: new ServiceIdentifier("EmailService"),
-  SmsService: new ServiceIdentifier("SmsService"),
   CaptchaService: new ServiceIdentifier("CaptchaService"),
 
-  // Infrastructure
   DatabaseClient: new ServiceIdentifier("DatabaseClient"),
   RedisClient: new ServiceIdentifier("RedisClient"),
   Logger: new ServiceIdentifier("Logger"),
-  CacheService: new ServiceIdentifier("CacheService"),
-
-  // Event System
-  EventBus: new ServiceIdentifier("EventBus"),
-  EventStore: new ServiceIdentifier("EventStore"),
 } as const;

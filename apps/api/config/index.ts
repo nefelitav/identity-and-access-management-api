@@ -1,6 +1,5 @@
 import { cleanEnv, str, num, url, makeValidator } from "envalid";
 
-// Custom validator for strings with a minimum length
 const minLengthString = (min: number) =>
   makeValidator<string>((input) => {
     if (input.length < min) {
