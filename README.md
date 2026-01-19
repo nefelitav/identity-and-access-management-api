@@ -96,9 +96,9 @@ The Session API manages user sessions, allowing users to view, delete, or revoke
 
 **Endpoints:**
 
-- **list sessions:** Retrieve all active sessions for the authenticated user, including details like user agent, IP address, creation time, and last activity time.
-- **delete session:** Delete a specific session by its ID, effectively logging out that session.
-- **delete all sessions:** Delete all active sessions for the authenticated user, logging out from all devices except the current one.
+- list sessions: Retrieve all active sessions for the authenticated user, including details like user agent, IP address, creation time, and last activity time.
+- delete session: Delete a specific session by its ID, effectively logging out that session.
+- delete all sessions: Delete all active sessions for the authenticated user, logging out from all devices except the current one.
 
 ---
 
@@ -106,11 +106,7 @@ The Session API manages user sessions, allowing users to view, delete, or revoke
 
 ## Architecture
 
-The project follows a **Controller-Service-Repository** architecture pattern, which helps maintain a clean separation of concerns:
-
-- **Controller:** Handles HTTP requests/responses, input validation, and delegates business logic to services.
-- **Service:** Contains core business logic, orchestrates repository calls, and implements application workflows.
-- **Repository:** Manages direct interaction with the database or external data sources, abstracting persistence details.
+The project follows a **Controller-Service-Repository** architecture pattern, which helps maintain a clean separation of concerns.
 
 ## Dependency Injection Container
 
@@ -118,14 +114,6 @@ The application uses a **custom DI container** to manage dependencies, supportin
 
 - **Service registration** as direct instances, factories (new instance per request), or singletons (one shared instance).
 - **Service resolution** through a centralized `get()` method.
-
-### Key Benefits
-
-- **Loose coupling:** Components depend on abstractions, enabling easy swapping or mocking.
-- **Centralized management:** All bindings and lifecycles are organized in one place.
-- **Lazy initialization:** Services are created only when needed.
-- **Singleton handling:** Efficient reuse of shared instances.
-- **Improved testability:** Easy injection of mocks without code changes.
 
 ## DTOs (Data Transfer Objects)
 
