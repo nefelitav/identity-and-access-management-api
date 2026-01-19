@@ -18,7 +18,7 @@ The Admin API provides endpoints for managing users within the application. It s
 
 - get users: Retrieve a paginated list of users, with optional filtering and sorting.
 - get user: Fetch detailed information about a specific user by their ID.
-- delete users: Remove all users from the system (use with caution).
+- delete users: Remove all users from the system.
 - delete user: Delete a single user by their ID.
 - update user: Modify user details such as email or password.
 
