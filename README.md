@@ -8,17 +8,6 @@ docker-compose up -d
 
 ---
 
-# Technologies Used
-
-- **TypeScript**
-- **MySQL**
-- **Prisma**
-- **Redis**
-- **Mailhog**
-- **Docker**
-
----
-
 # Services
 
 ## Admin:
