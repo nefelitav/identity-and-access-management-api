@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { ZodSchema, ZodError, ZodObject, ZodRawShape } from "zod";
+import { ZodSchema, ZodObject, ZodRawShape } from "zod";
 
 type ValidationSchema =
   | {
@@ -14,7 +14,7 @@ type ValidationSchema =
     }>;
 
 export function validateRequest(schema: ValidationSchema) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     try {
       if (schema instanceof ZodObject) {
         const shape = schema.shape;
@@ -47,15 +47,6 @@ export function validateRequest(schema: ValidationSchema) {
       }
       next();
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({
-          success: false,
-          error: {
-            message: "Validation Error",
-            details: error.errors,
-          },
-        });
-      }
       next(error);
     }
   };

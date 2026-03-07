@@ -1,2 +1,7 @@
 export * from "./totpService";
-export * from "./otpService";
+export {
+  generateCode,
+  generateAndSendCodeViaEmail,
+  generateAndSendCodeViaSms,
+  verifyCode as verifyOtpCode,
+} from "./otpService";

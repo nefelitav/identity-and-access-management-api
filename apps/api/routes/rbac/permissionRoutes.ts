@@ -1,51 +1,54 @@
 import { Router } from "express";
-import { PermissionController } from "~/controllers";
+import {
+  checkHandler,
+  grantHandler,
+  revokeHandler,
+  addPermissionHandler,
+  deletePermissionHandler,
+  getAllPermissionsHandler,
+  getUserPermissionsHandler,
+} from "~/controllers/rbac/permissionController";
 import { adminWriteLimiter } from "~/utils";
 import { authMiddleware } from "~/middleware";
 
 const permissionRouter = Router();
 
-permissionRouter.get(
-  "/check",
-  authMiddleware,
-  adminWriteLimiter,
-  PermissionController.check,
-);
+permissionRouter.get("/check", authMiddleware, adminWriteLimiter, checkHandler);
 permissionRouter.post(
   "/grant",
   authMiddleware,
   adminWriteLimiter,
-  PermissionController.grant,
+  grantHandler,
 );
 permissionRouter.post(
   "/revoke",
   authMiddleware,
   adminWriteLimiter,
-  PermissionController.revoke,
+  revokeHandler,
 );
 permissionRouter.post(
   "/add",
   authMiddleware,
   adminWriteLimiter,
-  PermissionController.addPermission,
+  addPermissionHandler,
 );
 permissionRouter.delete(
   "/delete",
   authMiddleware,
   adminWriteLimiter,
-  PermissionController.deletePermission,
+  deletePermissionHandler,
 );
 permissionRouter.get(
   "/",
   authMiddleware,
   adminWriteLimiter,
-  PermissionController.getAllPermissions,
+  getAllPermissionsHandler,
 );
 permissionRouter.get(
   "/:userId",
   authMiddleware,
   adminWriteLimiter,
-  PermissionController.getUserPermissions,
+  getUserPermissionsHandler,
 );
 
 export { permissionRouter };

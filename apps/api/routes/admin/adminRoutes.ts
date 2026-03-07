@@ -1,5 +1,11 @@
 import express from "express";
-import { AdminController } from "~/controllers";
+import {
+  getUserHandler,
+  getUsersHandler,
+  deleteUserHandler,
+  deleteUsersHandler,
+  updateProfileHandler,
+} from "~/controllers/admin/adminController";
 import { authMiddleware } from "~/middleware";
 import { validateRequest } from "~/middleware";
 import {
@@ -14,32 +20,24 @@ const adminRouter = express.Router();
 
 adminRouter.use(authMiddleware);
 
-adminRouter.get(
-  "/users",
-  validateRequest(getUsersSchema),
-  AdminController.getUsers,
-);
+adminRouter.get("/users", validateRequest(getUsersSchema), getUsersHandler);
 
-adminRouter.get(
-  "/users/:id",
-  validateRequest(getUserSchema),
-  AdminController.getUser,
-);
+adminRouter.get("/users/:id", validateRequest(getUserSchema), getUserHandler);
 
 adminRouter.put(
   "/users/:id",
   validateRequest(adminUpdateProfileSchema),
   adminWriteLimiter,
-  AdminController.updateProfile,
+  updateProfileHandler,
 );
 
 adminRouter.delete(
   "/users/:id",
   validateRequest(deleteUserSchema),
   adminWriteLimiter,
-  AdminController.deleteUser,
+  deleteUserHandler,
 );
 
-adminRouter.delete("/users", adminWriteLimiter, AdminController.deleteUsers);
+adminRouter.delete("/users", adminWriteLimiter, deleteUsersHandler);
 
 export { adminRouter };

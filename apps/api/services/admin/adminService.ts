@@ -10,38 +10,21 @@ interface GetUsersParams {
   sortOrder?: "asc" | "desc";
 }
 
-export class AdminService {
-  static async getUsers({
-    page,
-    limit,
-    search,
-    role,
-    sortBy,
-    sortOrder,
-  }: GetUsersParams) {
-    const userRepository = container.get<UserRepository>(
-      SERVICE_IDENTIFIERS.UserRepository,
-    );
-    return await userRepository.findMany({
-      page,
-      limit,
-      search,
-      role,
-      sortBy,
-      sortOrder,
-    });
-  }
+function getUserRepository() {
+  return container.get<UserRepository>(SERVICE_IDENTIFIERS.UserRepository);
+}
 
-  static async deleteUsers() {
-    const userRepository = container.get<UserRepository>(
-      SERVICE_IDENTIFIERS.UserRepository,
-    );
-    // Delete all users - this would need to be implemented in UserRepository
-    // For now, we'll need to get all users and delete them one by one
-    // This is not ideal but works for now
-    const users = await userRepository.findMany({ page: 1, limit: 1000 });
-    for (const user of users.data) {
-      await userRepository.delete(user.id);
-    }
+/** Fetch a paginated list of users with optional filtering and sorting. */
+export async function getUsers(params: GetUsersParams) {
+  const userRepository = getUserRepository();
+  return await userRepository.findMany(params);
+}
+
+/** Delete all users from the system. */
+export async function deleteUsers() {
+  const userRepository = getUserRepository();
+  const users = await userRepository.findMany({ page: 1, limit: 1000 });
+  for (const user of users.data) {
+    await userRepository.delete(user.id);
   }
 }

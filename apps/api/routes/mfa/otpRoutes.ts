@@ -1,19 +1,15 @@
 import Router from "express";
-import { OtpController } from "~/controllers";
+import {
+  requestCodeInSmsHandler,
+  requestCodeInEmailHandler,
+  verifyCodeHandler,
+} from "~/controllers/mfa/otpController";
 import { otpRequestLimiter, otpVerifyLimiter } from "~/utils";
 
 const otpRouter = Router();
 
-otpRouter.post(
-  "/request-sms",
-  otpRequestLimiter,
-  OtpController.requestCodeInSms,
-);
-otpRouter.post(
-  "/request-email",
-  otpRequestLimiter,
-  OtpController.requestCodeInEmail,
-);
-otpRouter.post("/verify", otpVerifyLimiter, OtpController.verifyCode);
+otpRouter.post("/request-sms", otpRequestLimiter, requestCodeInSmsHandler);
+otpRouter.post("/request-email", otpRequestLimiter, requestCodeInEmailHandler);
+otpRouter.post("/verify", otpVerifyLimiter, verifyCodeHandler);
 
 export { otpRouter };

@@ -1,125 +1,58 @@
-import { Request, Response } from "express";
-import { RbacService } from "~/services";
-import {
-  AssignRoleRequest,
-  AssignRoleResponse,
-  CreateRoleRequest,
-  CreateRoleResponse,
-  DeleteRoleResponse,
-  GetAllRolesResponse,
-  GetRolesResponse,
-  RemoveRoleRequest,
-  RemoveRoleResponse,
-} from "~/dtos";
-import { ResponseCode, createLogger } from "~/utils";
-import { BaseController } from "~/controllers";
+import { handleRequest } from "~/controllers/base/baseController";
+import * as rbacService from "~/services/rbac/rbacService";
+import { createLogger } from "~/utils";
 
 const logger = createLogger("RbacController");
 
-export class RbacController extends BaseController {
-  static async assignRole(
-    req: AssignRoleRequest,
-    res: Response<AssignRoleResponse>,
-  ) {
-    await this.handleRequest(
-      req,
-      res,
-      async () => {
-        const { userId, role } = req.body;
-        await RbacService.assignRoleToUser(userId, role);
+/** Assign a role to a user. */
+export const assignRoleHandler = handleRequest(async (req) => {
+  const { userId, role } = req.body;
+  await rbacService.assignRoleToUser(userId, role);
 
-        logger.info(`Assigned role "${role}" to user: ${userId}`);
-        return { message: "Role assigned" };
-      },
-      ResponseCode.OK,
-    );
-  }
+  logger.info(`Assigned role "${role}" to user: ${userId}`);
+  return { message: "Role assigned" };
+});
 
-  static async removeRole(
-    req: RemoveRoleRequest,
-    res: Response<RemoveRoleResponse>,
-  ) {
-    await this.handleRequest(
-      req,
-      res,
-      async () => {
-        const { userId, role } = req.body;
-        await RbacService.removeRoleFromUser(userId, role);
+/** Remove a role from a user. */
+export const removeRoleHandler = handleRequest(async (req) => {
+  const { userId, role } = req.body;
+  await rbacService.removeRoleFromUser(userId, role);
 
-        logger.info(`Removed role "${role}" from user: ${userId}`);
-        return { message: "Role removed" };
-      },
-      ResponseCode.OK,
-    );
-  }
+  logger.info(`Removed role "${role}" from user: ${userId}`);
+  return { message: "Role removed" };
+});
 
-  static async getRoles(
-    req: Request<{ userId: string }>,
-    res: Response<GetRolesResponse>,
-  ) {
-    await this.handleRequest(
-      req,
-      res,
-      async () => {
-        const { userId } = req.params;
-        const roles = await RbacService.getUserRoles(userId);
+/** Get all roles assigned to a specific user. */
+export const getRolesHandler = handleRequest(async (req) => {
+  const { userId } = req.params;
+  const roles = await rbacService.getUserRoles(userId);
 
-        logger.info(
-          `Fetched roles for user: ${userId}. Count: ${roles.length}`,
-        );
-        return { roles };
-      },
-      ResponseCode.OK,
-    );
-  }
+  logger.info(`Fetched roles for user: ${userId}. Count: ${roles.length}`);
+  return { roles };
+});
 
-  static async getAllRoles(req: Request, res: Response<GetAllRolesResponse>) {
-    await this.handleRequest(
-      req,
-      res,
-      async () => {
-        const roles = await RbacService.getAllRoles();
+/** Fetch all roles in the system. */
+export const getAllRolesHandler = handleRequest(async () => {
+  const roles = await rbacService.getAllRoles();
 
-        logger.info(`Fetched all roles. Count: ${roles.data.length}`);
-        return { roles };
-      },
-      ResponseCode.OK,
-    );
-  }
+  logger.info(`Fetched all roles. Count: ${roles.data.length}`);
+  return { roles };
+});
 
-  static async createRole(
-    req: CreateRoleRequest,
-    res: Response<CreateRoleResponse>,
-  ) {
-    await this.handleRequest(
-      req,
-      res,
-      async () => {
-        const { name } = req.body;
-        const role = await RbacService.createRole(name);
+/** Create a new role. */
+export const createRoleHandler = handleRequest(async (req) => {
+  const { name } = req.body;
+  const role = await rbacService.createRole(name);
 
-        logger.info(`Created new role: "${name}"`);
-        return { role };
-      },
-      ResponseCode.OK,
-    );
-  }
+  logger.info(`Created new role: "${name}"`);
+  return { role };
+});
 
-  static async deleteRole(
-    req: Request<{ name: string }>,
-    res: Response<DeleteRoleResponse>,
-  ) {
-    await this.handleRequest(
-      req,
-      res,
-      async () => {
-        const { name } = req.params;
-        await RbacService.deleteRole(name);
+/** Delete an existing role by name. */
+export const deleteRoleHandler = handleRequest(async (req) => {
+  const { name } = req.params;
+  await rbacService.deleteRole(name);
 
-        logger.info(`Deleted role: "${name}"`);
-        return { message: "Role deleted" };
-      },
-      ResponseCode.OK,
-    );
-  }
-}
+  logger.info(`Deleted role: "${name}"`);
+  return { message: "Role deleted" };
+});

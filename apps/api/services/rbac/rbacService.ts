@@ -1,33 +1,37 @@
 import { RbacRepository } from "~/repositories";
 import { container, SERVICE_IDENTIFIERS } from "~/core";
 
-export class RbacService {
-  private static get rbacRepo() {
-    return container.get<RbacRepository>(SERVICE_IDENTIFIERS.RbacRepository);
-  }
+function getRbacRepository() {
+  return container.get<RbacRepository>(SERVICE_IDENTIFIERS.RbacRepository);
+}
 
-  static async assignRoleToUser(userId: string, role: string) {
-    return this.rbacRepo.assignRoleToUser(userId, role);
-  }
+/** Assign a named role to a user. */
+export async function assignRoleToUser(userId: string, role: string) {
+  return getRbacRepository().assignRoleToUser(userId, role);
+}
 
-  static async removeRoleFromUser(userId: string, role: string) {
-    return this.rbacRepo.removeRoleFromUser(userId, role);
-  }
+/** Remove a named role from a user. */
+export async function removeRoleFromUser(userId: string, role: string) {
+  return getRbacRepository().removeRoleFromUser(userId, role);
+}
 
-  static async getUserRoles(userId: string) {
-    const userRoles = await this.rbacRepo.getUserRoles(userId);
-    return userRoles.map((ur: any) => ur.role.name);
-  }
+/** Get all role names for a user. */
+export async function getUserRoles(userId: string) {
+  const userRoles = await getRbacRepository().getUserRoles(userId);
+  return userRoles.map((ur: any) => ur.role.name);
+}
 
-  static async getAllRoles() {
-    return this.rbacRepo.getAllRoles();
-  }
+/** Get all roles in the system (paginated). */
+export async function getAllRoles() {
+  return getRbacRepository().getAllRoles();
+}
 
-  static async createRole(name: string) {
-    return this.rbacRepo.createRole(name);
-  }
+/** Create a new role. */
+export async function createRole(name: string) {
+  return getRbacRepository().createRole(name);
+}
 
-  static async deleteRole(name: string) {
-    return this.rbacRepo.deleteRole(name);
-  }
+/** Delete an existing role by name. */
+export async function deleteRole(name: string) {
+  return getRbacRepository().deleteRole(name);
 }

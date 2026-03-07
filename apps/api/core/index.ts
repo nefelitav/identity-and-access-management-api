@@ -1,2 +1,2 @@
 export * from "./container";
-export * from "./serviceFactory";
+export { initializeServices } from "./serviceFactory";

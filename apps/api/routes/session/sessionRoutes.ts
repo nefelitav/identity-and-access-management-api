@@ -1,27 +1,26 @@
 import { Router } from "express";
-import { SessionController } from "~/controllers";
+import {
+  listSessionsHandler,
+  deleteSessionHandler,
+  deleteAllSessionsHandler,
+} from "~/controllers/session/sessionController";
 import { authMiddleware } from "~/middleware";
 import { sessionLimiter } from "~/utils";
 
 const sessionRouter = Router();
 
-sessionRouter.get(
-  "/",
-  authMiddleware,
-  sessionLimiter,
-  SessionController.listSessions,
-);
+sessionRouter.get("/", authMiddleware, sessionLimiter, listSessionsHandler);
 sessionRouter.delete(
   "/:sessionId",
   authMiddleware,
   sessionLimiter,
-  SessionController.deleteSession,
+  deleteSessionHandler,
 );
 sessionRouter.delete(
   "/",
   authMiddleware,
   sessionLimiter,
-  SessionController.deleteAllSessions,
+  deleteAllSessionsHandler,
 );
 
 export { sessionRouter };

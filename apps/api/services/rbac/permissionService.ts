@@ -1,41 +1,52 @@
 import { container, SERVICE_IDENTIFIERS } from "~/core";
 import { PermissionsRepository } from "~/repositories/rbac";
 
-export class PermissionService {
-  private static get permissionsRepo() {
-    return container.get<PermissionsRepository>(
-      SERVICE_IDENTIFIERS.PermissionRepository,
-    );
-  }
+function getPermissionsRepository() {
+  return container.get<PermissionsRepository>(
+    SERVICE_IDENTIFIERS.PermissionRepository,
+  );
+}
 
-  static async checkPermission(
-    userId: string,
-    permission: string,
-  ): Promise<boolean> {
-    return this.permissionsRepo.hasPermission(userId, permission);
-  }
+/** Check whether a user has a specific permission. */
+export async function checkPermission(
+  userId: string,
+  permission: string,
+): Promise<boolean> {
+  return getPermissionsRepository().hasPermission(userId, permission);
+}
 
-  static async grantPermission(roleId: string, permission: string) {
-    return this.permissionsRepo.grantPermissionToRole(roleId, permission);
-  }
+/** Grant a permission to a role. */
+export async function grantPermission(roleId: string, permission: string) {
+  return getPermissionsRepository().grantPermissionToRole(roleId, permission);
+}
 
-  static async revokePermissionFromRole(roleId: string, permission: string) {
-    return this.permissionsRepo.revokePermissionFromRole(roleId, permission);
-  }
+/** Revoke a permission from a role. */
+export async function revokePermissionFromRole(
+  roleId: string,
+  permission: string,
+) {
+  return getPermissionsRepository().revokePermissionFromRole(
+    roleId,
+    permission,
+  );
+}
 
-  static async getAllPermissions() {
-    return this.permissionsRepo.getAllPermissions();
-  }
+/** Get all permissions in the system. */
+export async function getAllPermissions() {
+  return getPermissionsRepository().getAllPermissions();
+}
 
-  static async getUserPermissions(userId: string) {
-    return this.permissionsRepo.getUserPermissions(userId);
-  }
+/** Get all permissions assigned to a user through their roles. */
+export async function getUserPermissions(userId: string) {
+  return getPermissionsRepository().getUserPermissions(userId);
+}
 
-  static async addPermission(name: string) {
-    return this.permissionsRepo.createPermission(name);
-  }
+/** Add a new permission to the system. */
+export async function addPermission(name: string) {
+  return getPermissionsRepository().createPermission(name);
+}
 
-  static async deletePermission(name: string) {
-    return this.permissionsRepo.deletePermission(name);
-  }
+/** Delete a permission by name. */
+export async function deletePermission(name: string) {
+  return getPermissionsRepository().deletePermission(name);
 }

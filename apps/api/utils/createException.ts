@@ -1,11 +1,17 @@
+export interface AppException extends Error {
+  statusCode: number;
+  code?: string;
+}
+
 export function createException(
   name: string,
   message: string,
   statusCode = 500,
-) {
-  const error = new Error(message);
+  code?: string,
+): AppException {
+  const error = new Error(message) as AppException;
   error.name = name;
-  // @ts-ignore
   error.statusCode = statusCode;
+  if (code) error.code = code;
   return error;
 }

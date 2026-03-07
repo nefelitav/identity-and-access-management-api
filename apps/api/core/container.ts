@@ -1,80 +1,88 @@
-export class ServiceIdentifier {
-  public readonly serviceIdentifier: symbol;
-
-  constructor(identifier: string) {
-    this.serviceIdentifier = Symbol(identifier);
-  }
+/** Opaque service identifier wrapping a unique symbol. */
+export interface ServiceIdentifier {
+  readonly serviceIdentifier: symbol;
 }
 
-export class Container {
-  private services = new Map<symbol, any>();
-  private factories = new Map<symbol, () => any>();
+/** Create a new ServiceIdentifier. */
+export function createServiceIdentifier(name: string): ServiceIdentifier {
+  return Object.freeze({ serviceIdentifier: Symbol(name) });
+}
 
-  bind<T>(identifier: ServiceIdentifier, implementation: T): void {
-    this.services.set(identifier.serviceIdentifier, implementation);
-  }
+/** Dependency-injection container. */
+export interface Container {
+  bind<T>(id: ServiceIdentifier, implementation: T): void;
+  bindFactory<T>(id: ServiceIdentifier, factory: () => T): void;
+  bindSingleton<T>(id: ServiceIdentifier, factory: () => T): void;
+  isBound(id: ServiceIdentifier): boolean;
+  get<T>(id: ServiceIdentifier): T;
+}
 
-  bindFactory<T>(identifier: ServiceIdentifier, factory: () => T): void {
-    this.factories.set(identifier.serviceIdentifier, factory);
-  }
+/** Create a new DI container. */
+export function createContainer(): Container {
+  const services = new Map<symbol, any>();
+  const factories = new Map<symbol, () => any>();
 
-  bindSingleton<T>(identifier: ServiceIdentifier, factory: () => T): void {
-    let instance: T | null = null;
-    this.factories.set(identifier.serviceIdentifier, () => {
-      if (!instance) {
-        instance = factory();
+  return {
+    bind<T>(id: ServiceIdentifier, implementation: T) {
+      services.set(id.serviceIdentifier, implementation);
+    },
+
+    bindFactory<T>(id: ServiceIdentifier, factory: () => T) {
+      factories.set(id.serviceIdentifier, factory);
+    },
+
+    bindSingleton<T>(id: ServiceIdentifier, factory: () => T) {
+      let instance: T | null = null;
+      factories.set(id.serviceIdentifier, () => {
+        if (!instance) instance = factory();
+        return instance;
+      });
+    },
+
+    isBound(id: ServiceIdentifier) {
+      return (
+        services.has(id.serviceIdentifier) ||
+        factories.has(id.serviceIdentifier)
+      );
+    },
+
+    get<T>(id: ServiceIdentifier): T {
+      if (services.has(id.serviceIdentifier)) {
+        return services.get(id.serviceIdentifier);
       }
-      return instance;
-    });
-  }
-
-  isBound(identifier: ServiceIdentifier): boolean {
-    return (
-      this.services.has(identifier.serviceIdentifier) ||
-      this.factories.has(identifier.serviceIdentifier)
-    );
-  }
-
-  get<T>(identifier: ServiceIdentifier): T {
-    // Check for direct service binding
-    if (this.services.has(identifier.serviceIdentifier)) {
-      return this.services.get(identifier.serviceIdentifier);
-    }
-
-    // Check for factory binding
-    if (this.factories.has(identifier.serviceIdentifier)) {
-      const factory = this.factories.get(identifier.serviceIdentifier)!;
-      return factory();
-    }
-
-    throw new Error(
-      `Service not found: ${identifier.serviceIdentifier.toString()}`,
-    );
-  }
+      if (factories.has(id.serviceIdentifier)) {
+        return factories.get(id.serviceIdentifier)!();
+      }
+      throw new Error(`Service not found: ${id.serviceIdentifier.toString()}`);
+    },
+  };
 }
 
-export const container = new Container();
+/** Global application container. */
+export const container = createContainer();
 
+/** Well-known service identifiers used throughout the app. */
 export const SERVICE_IDENTIFIERS = {
   // Repositories
-  UserRepository: new ServiceIdentifier("UserRepository"),
-  SessionRepository: new ServiceIdentifier("SessionRepository"),
-  RbacRepository: new ServiceIdentifier("RbacRepository"),
-  PermissionRepository: new ServiceIdentifier("PermissionRepository"),
-  TotpRepository: new ServiceIdentifier("TotpRepository"),
+  UserRepository: createServiceIdentifier("UserRepository"),
+  SessionRepository: createServiceIdentifier("SessionRepository"),
+  RbacRepository: createServiceIdentifier("RbacRepository"),
+  PermissionRepository: createServiceIdentifier("PermissionRepository"),
+  TotpRepository: createServiceIdentifier("TotpRepository"),
 
-  AuthService: new ServiceIdentifier("AuthService"),
-  SessionService: new ServiceIdentifier("SessionService"),
-  RbacService: new ServiceIdentifier("RbacService"),
-  PermissionService: new ServiceIdentifier("PermissionService"),
-  TotpService: new ServiceIdentifier("TotpService"),
-  OtpService: new ServiceIdentifier("OtpService"),
-  AdminService: new ServiceIdentifier("AdminService"),
-  ProfileService: new ServiceIdentifier("ProfileService"),
+  // Services
+  AuthService: createServiceIdentifier("AuthService"),
+  SessionService: createServiceIdentifier("SessionService"),
+  RbacService: createServiceIdentifier("RbacService"),
+  PermissionService: createServiceIdentifier("PermissionService"),
+  TotpService: createServiceIdentifier("TotpService"),
+  OtpService: createServiceIdentifier("OtpService"),
+  AdminService: createServiceIdentifier("AdminService"),
+  ProfileService: createServiceIdentifier("ProfileService"),
+  CaptchaService: createServiceIdentifier("CaptchaService"),
 
-  CaptchaService: new ServiceIdentifier("CaptchaService"),
-
-  DatabaseClient: new ServiceIdentifier("DatabaseClient"),
-  RedisClient: new ServiceIdentifier("RedisClient"),
-  Logger: new ServiceIdentifier("Logger"),
+  // Infrastructure
+  DatabaseClient: createServiceIdentifier("DatabaseClient"),
+  RedisClient: createServiceIdentifier("RedisClient"),
+  Logger: createServiceIdentifier("Logger"),
 } as const;
