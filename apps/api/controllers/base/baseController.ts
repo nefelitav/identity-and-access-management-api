@@ -1,17 +1,23 @@
-import { Request, Response } from "express";
-import { createLogger, ResponseCode } from "~/utils";
+import { Request, Response, NextFunction } from "express";
+import { ResponseCode } from "~/utils";
 
-const logger = createLogger("BaseController");
+export type AppRequestHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => Promise<void>;
 
-export abstract class BaseController {
-  protected static async handleRequest<T>(
-    req: Request,
-    res: Response,
-    handler: () => Promise<T | void>,
-    successCode: number = ResponseCode.OK,
-  ): Promise<void> {
+/**
+ * Wraps an async handler so it catches errors and forwards them to the
+ * Express error-handling middleware instead of swallowing them.
+ */
+export function handleRequest(
+  handler: (req: Request) => Promise<unknown>,
+  successCode: number = ResponseCode.OK,
+): AppRequestHandler {
+  return async (req, res, next) => {
     try {
-      const result = await handler();
+      const result = await handler(req);
 
       if (result !== undefined && result !== null) {
         res.status(successCode).json({
@@ -22,26 +28,15 @@ export abstract class BaseController {
         res.sendStatus(successCode);
       }
     } catch (error) {
-      logger.error(
-        `Request failed for ${req.method} ${req.path}`,
-        error as Error,
-      );
-      if (error instanceof Error) {
-        const typedError = error as { statusCode?: number; message?: string };
-
-        res.status(typedError.statusCode ?? 500).json({
-          success: false,
-          error: { message: typedError.message },
-        });
-      }
+      next(error); // let the centralised error handler deal with it
     }
-  }
+  };
+}
 
-  protected static extractUserAgent(req: Request): string | undefined {
-    return req.headers["user-agent"];
-  }
+export function extractUserAgent(req: Request): string | undefined {
+  return req.headers["user-agent"];
+}
 
-  protected static extractIpAddress(req: Request): string | undefined {
-    return req.ip;
-  }
+export function extractIpAddress(req: Request): string | undefined {
+  return req.ip;
 }

@@ -1,80 +1,44 @@
-import { Response } from "express";
-import { SessionService } from "~/services";
-import {
-  ListSessionsRequest,
-  ListSessionsResponse,
-  DeleteSessionRequest,
-  DeleteSessionResponse,
-  DeleteAllSessionsRequest,
-  DeleteAllSessionsResponse,
-} from "~/dtos";
-import { ResponseCode, createLogger } from "~/utils";
-import { BaseController } from "~/controllers";
+import { handleRequest } from "~/controllers/base/baseController";
+import { createSessionService } from "~/services/session/sessionService";
+import { createLogger } from "~/utils";
 
 const logger = createLogger("SessionController");
 
-export class SessionController extends BaseController {
-  static async listSessions(
-    req: ListSessionsRequest,
-    res: Response<ListSessionsResponse>,
-  ) {
-    await this.handleRequest(
-      req,
-      res,
-      async () => {
-        const userId = req.user?.userId;
-        const sessions = await SessionService.getSessions(userId);
+/** List all active sessions for the authenticated user. */
+export const listSessionsHandler = handleRequest(async (req) => {
+  const userId = req.user?.userId;
+  const sessionService = createSessionService();
+  const sessions = await sessionService.getSessions(userId);
 
-        logger.info(`Fetched ${sessions.length} sessions for user: ${userId}`);
+  logger.info(`Fetched ${sessions.length} sessions for user: ${userId}`);
+  return {
+    sessions: sessions.map((session: any) => ({
+      id: session.id,
+      userId: session.userId,
+      userAgent: session.userAgent,
+      ip: session.ipAddress,
+      createdAt: session.createdAt.toISOString(),
+      lastActiveAt: session.lastActiveAt.toISOString(),
+    })),
+  };
+});
 
-        return {
-          sessions: sessions.map((session) => ({
-            id: session.id,
-            userId: session.userId,
-            userAgent: session.userAgent,
-            ip: session.ipAddress,
-            createdAt: session.createdAt.toISOString(),
-            lastActiveAt: session.lastActiveAt.toISOString(),
-          })),
-        };
-      },
-      ResponseCode.OK,
-    );
-  }
+/** Delete a specific session by ID. */
+export const deleteSessionHandler = handleRequest(async (req) => {
+  const { sessionId } = req.body.params;
+  const sessionService = createSessionService();
+  await sessionService.deleteSession(sessionId);
 
-  static async deleteSession(
-    req: DeleteSessionRequest,
-    res: Response<DeleteSessionResponse>,
-  ) {
-    await this.handleRequest(
-      req,
-      res,
-      async () => {
-        const { sessionId } = req.body.params;
-        await SessionService.deleteSession(sessionId);
+  logger.info(`Deleted session with ID: ${sessionId}`);
+  return { message: "Session deleted" };
+});
 
-        logger.info(`Deleted session with ID: ${sessionId}`);
-        return { message: "Session deleted" };
-      },
-      ResponseCode.OK,
-    );
-  }
+/** Delete all sessions for the authenticated user. */
+export const deleteAllSessionsHandler = handleRequest(async (req) => {
+  const userId = req.user?.userId;
+  const sessionService = createSessionService();
+  await sessionService.deleteAllSessions(userId);
 
-  static async deleteAllSessions(
-    req: DeleteAllSessionsRequest,
-    res: Response<DeleteAllSessionsResponse>,
-  ) {
-    await this.handleRequest(
-      req,
-      res,
-      async () => {
-        const userId = req.user?.userId;
-        await SessionService.deleteAllSessions(userId);
-
-        logger.info(`Deleted all sessions for user: ${userId}`);
-        return { message: "All sessions deleted" };
-      },
-      ResponseCode.OK,
-    );
-  }
-}
+  logger.info(`Deleted all sessions for user: ${userId}`);
+  return { message: "All sessions deleted" };
+});

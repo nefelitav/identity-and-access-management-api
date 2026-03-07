@@ -1,100 +1,69 @@
-import { Request, Response } from "express";
-import { AdminService, ProfileService } from "~/services";
-import { BaseController } from "~/controllers";
 import {
-  DeleteUserResponse,
-  UpdateProfileResponse,
-  GetUsersResponse,
-  DeleteUsersResponse,
-  GetUserResponse,
-} from "~/dtos";
-import { createLogger } from "~/utils";
+  handleRequest,
+  extractUserAgent,
+  extractIpAddress,
+} from "~/controllers/base/baseController";
+import * as adminService from "~/services/admin/adminService";
+import * as profileService from "~/services/profile/profileService";
+import createLogger from "~/utils/createLogger";
 
 const logger = createLogger("AdminController");
 
-export class AdminController extends BaseController {
-  static async getUser(
-    req: Request,
-    res: Response<GetUserResponse>,
-  ): Promise<void> {
-    await this.handleRequest(req, res, async () => {
-      const userId = req.params.id;
-      const user = await ProfileService.getUser(userId);
+/** Fetch a single user by ID. */
+export const getUserHandler = handleRequest(async (req) => {
+  const userId = req.params.id;
+  const user = await profileService.getUser(userId);
+  logger.info(`Fetched user with ID: ${userId}`);
+  return user;
+});
 
-      logger.info(`Fetched user with ID: ${userId}`);
-      return user;
-    });
-  }
+/** Fetch a paginated list of users with optional filtering and sorting. */
+export const getUsersHandler = handleRequest(async (req) => {
+  const { page = 1, limit = 10, search, role, sortBy, sortOrder } = req.query;
 
-  static async getUsers(
-    req: Request,
-    res: Response<GetUsersResponse>,
-  ): Promise<void> {
-    await this.handleRequest(req, res, async () => {
-      const {
-        page = 1,
-        limit = 10,
-        search,
-        role,
-        sortBy,
-        sortOrder,
-      } = req.query;
+  const users = await adminService.getUsers({
+    page: Number(page),
+    limit: Number(limit),
+    search: search as string,
+    role: role as string,
+    sortBy: sortBy as string,
+    sortOrder: sortOrder as "asc" | "desc",
+  });
 
-      const users = await AdminService.getUsers({
-        page: Number(page),
-        limit: Number(limit),
-        search: search as string,
-        role: role as string,
-        sortBy: sortBy as string,
-        sortOrder: sortOrder as "asc" | "desc",
-      });
+  logger.info(`Fetched ${users.data.length} users (page ${page})`);
+  return users;
+});
 
-      logger.info(`Fetched ${users.data.length} users (page ${page})`);
-      return users;
-    });
-  }
+/** Delete all users from the system. */
+export const deleteUsersHandler = handleRequest(async () => {
+  await adminService.deleteUsers();
+  logger.info("Deleted all users");
+  return null;
+});
 
-  static async deleteUsers(
-    req: Request,
-    res: Response<DeleteUsersResponse>,
-  ): Promise<void> {
-    await this.handleRequest(req, res, async () => {
-      await AdminService.deleteUsers();
-      logger.info("Deleted all users");
-    });
-  }
+/** Delete a single user by ID. */
+export const deleteUserHandler = handleRequest(async (req) => {
+  const userId = req.params.id;
+  await profileService.deleteUser(userId);
+  logger.info(`Deleted user with ID: ${userId}`);
+  return null;
+});
 
-  static async deleteUser(
-    req: Request,
-    res: Response<DeleteUserResponse>,
-  ): Promise<void> {
-    await this.handleRequest(req, res, async () => {
-      const userId = req.params.id;
-      await ProfileService.deleteUser(userId);
-      logger.info(`Deleted user with ID: ${userId}`);
-    });
-  }
+/** Admin-level profile update for a specific user. */
+export const updateProfileHandler = handleRequest(async (req) => {
+  const { email, password } = req.body;
+  const userId = req.params.id;
+  const userAgent = extractUserAgent(req);
+  const ip = extractIpAddress(req);
 
-  static async updateProfile(
-    req: Request,
-    res: Response<UpdateProfileResponse>,
-  ): Promise<void> {
-    await this.handleRequest(req, res, async () => {
-      const { email, password } = req.body;
-      const userId = req.params.id;
-      const userAgent = this.extractUserAgent(req);
-      const ip = this.extractIpAddress(req);
+  const updatedUser = await profileService.updateProfile({
+    userId,
+    email,
+    password,
+    userAgent,
+    ip,
+  });
 
-      const updatedUser = await ProfileService.updateProfile({
-        userId,
-        email,
-        password,
-        userAgent,
-        ip,
-      });
-
-      logger.info(`Admin updated profile for user with ID: ${userId}`);
-      return updatedUser;
-    });
-  }
-}
+  logger.info(`Admin updated profile for user with ID: ${userId}`);
+  return updatedUser;
+});

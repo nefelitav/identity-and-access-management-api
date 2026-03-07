@@ -1,5 +1,9 @@
 import { PrismaClient, Prisma } from "@prisma/client";
-import { BaseRepository, FilterOptions } from "~/repositories";
+import {
+  createBaseRepository,
+  FilterOptions,
+  type BaseRepository,
+} from "~/repositories/base/BaseRepository";
 
 interface UserCreateInput {
   email: string;
@@ -19,138 +23,128 @@ interface UserFilters extends FilterOptions {
   locked?: boolean;
 }
 
-export class UserRepository extends BaseRepository<
-  Prisma.UserGetPayload<{}>,
-  UserCreateInput,
-  UserUpdateInput
-> {
-  constructor(prisma: PrismaClient) {
-    super(prisma, "user");
+export interface UserRepository
+  extends BaseRepository<
+    Prisma.UserGetPayload<{}>,
+    UserCreateInput,
+    UserUpdateInput
+  > {
+  findByEmail(email: string): Promise<any>;
+  existsByEmail(email: string): Promise<boolean>;
+  updateFailedAttempts(
+    id: string,
+    attempts: number,
+    lockoutUntil?: Date | null,
+  ): Promise<Prisma.UserGetPayload<{}>>;
+  resetFailedAttempts(id: string): Promise<Prisma.UserGetPayload<{}>>;
+}
+
+function buildWhereClause(filters: UserFilters): Prisma.UserWhereInput {
+  const where: Prisma.UserWhereInput = {};
+
+  if (filters.search) {
+    where.email = { contains: filters.search, mode: "insensitive" };
   }
 
-  async findByEmail(email: string) {
-    return await this.prisma.user.findUnique({
-      where: { email },
-      include: {
-        userRoles: {
-          include: {
-            role: {
-              include: {
-                rolePermissions: {
-                  include: {
-                    permission: true,
+  if (filters.email) {
+    where.email = filters.email;
+  }
+
+  if (filters.role) {
+    where.userRoles = { some: { role: { name: filters.role } } };
+  }
+
+  if (filters.locked !== undefined) {
+    if (filters.locked) {
+      where.lockoutUntil = { gt: new Date() };
+    } else {
+      where.OR = [{ lockoutUntil: null }, { lockoutUntil: { lt: new Date() } }];
+    }
+  }
+
+  return where;
+}
+
+function buildOrderByClause(
+  sortBy?: string,
+  sortOrder: "asc" | "desc" = "desc",
+): Prisma.UserOrderByWithRelationInput {
+  switch (sortBy) {
+    case "email":
+      return { email: sortOrder };
+    case "createdAt":
+      return { createdAt: sortOrder };
+    case "updatedAt":
+      return { updatedAt: sortOrder };
+    default:
+      return { createdAt: "desc" };
+  }
+}
+
+/** Create a UserRepository backed by the given PrismaClient. */
+export function createUserRepository(prisma: PrismaClient): UserRepository {
+  const base = createBaseRepository<
+    Prisma.UserGetPayload<{}>,
+    UserCreateInput,
+    UserUpdateInput
+  >(prisma, "user", buildWhereClause, buildOrderByClause);
+
+  return {
+    ...base,
+
+    async findByEmail(email: string) {
+      return prisma.user.findUnique({
+        where: { email },
+        include: {
+          userRoles: {
+            include: {
+              role: {
+                include: {
+                  rolePermissions: {
+                    include: { permission: true },
                   },
                 },
               },
             },
           },
-        },
-        sessions: {
-          select: {
-            id: true,
-            userAgent: true,
-            ipAddress: true,
-            createdAt: true,
-            lastActiveAt: true,
-            expiresAt: true,
+          sessions: {
+            select: {
+              id: true,
+              userAgent: true,
+              ipAddress: true,
+              createdAt: true,
+              lastActiveAt: true,
+              expiresAt: true,
+            },
           },
         },
-      },
-    });
-  }
+      });
+    },
 
-  async existsByEmail(email: string): Promise<boolean> {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-      select: { id: true },
-    });
-    return !!user;
-  }
+    async existsByEmail(email: string): Promise<boolean> {
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      });
+      return !!user;
+    },
 
-  async updateFailedAttempts(
-    id: string,
-    attempts: number,
-    lockoutUntil?: Date | null,
-  ) {
-    return await this.prisma.user.update({
-      where: { id },
-      data: {
-        failedLoginAttempts: attempts,
-        lockoutUntil,
-      },
-    });
-  }
+    async updateFailedAttempts(
+      id: string,
+      attempts: number,
+      lockoutUntil?: Date | null,
+    ) {
+      return prisma.user.update({
+        where: { id },
+        data: { failedLoginAttempts: attempts, lockoutUntil },
+      });
+    },
 
-  async resetFailedAttempts(id: string) {
-    return await this.prisma.user.update({
-      where: { id },
-      data: {
-        failedLoginAttempts: 0,
-        lockoutUntil: null,
-      },
-    });
-  }
-
-  protected buildWhereClause(filters: UserFilters): Prisma.UserWhereInput {
-    const where: Prisma.UserWhereInput = {};
-
-    if (filters.search) {
-      where.email = {
-        contains: filters.search,
-        mode: "insensitive",
-      };
-    }
-
-    if (filters.email) {
-      where.email = filters.email;
-    }
-
-    if (filters.role) {
-      where.userRoles = {
-        some: {
-          role: {
-            name: filters.role,
-          },
-        },
-      };
-    }
-
-    if (filters.locked !== undefined) {
-      if (filters.locked) {
-        where.lockoutUntil = {
-          gt: new Date(),
-        };
-      } else {
-        where.OR = [
-          { lockoutUntil: null },
-          { lockoutUntil: { lt: new Date() } },
-        ];
-      }
-    }
-
-    return where;
-  }
-
-  protected buildOrderByClause(
-    sortBy?: string,
-    sortOrder: "asc" | "desc" = "desc",
-  ): Prisma.UserOrderByWithRelationInput {
-    const orderBy: Prisma.UserOrderByWithRelationInput = {};
-
-    switch (sortBy) {
-      case "email":
-        orderBy.email = sortOrder;
-        break;
-      case "createdAt":
-        orderBy.createdAt = sortOrder;
-        break;
-      case "updatedAt":
-        orderBy.updatedAt = sortOrder;
-        break;
-      default:
-        orderBy.createdAt = "desc";
-    }
-
-    return orderBy;
-  }
+    async resetFailedAttempts(id: string) {
+      return prisma.user.update({
+        where: { id },
+        data: { failedLoginAttempts: 0, lockoutUntil: null },
+      });
+    },
+  };
 }

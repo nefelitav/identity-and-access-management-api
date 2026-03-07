@@ -13,11 +13,19 @@ import {
   rbacRouter,
   healthRouter,
 } from "~/routes";
+import { errorHandler } from "~/middleware";
 
 dotenv.config();
 const app = express();
 
 app.use(express.json());
+
+// --- Request-ID middleware (correlation) ---
+app.use((req, _res, next) => {
+  const id = (req.headers["x-request-id"] as string) ?? crypto.randomUUID();
+  req.headers["x-request-id"] = id;
+  next();
+});
 
 app.use("/admin", adminRouter);
 app.use("/auth", authRouter);
@@ -29,5 +37,8 @@ app.use("/mfa/otp", otpRouter);
 app.use("/permissions", permissionRouter);
 app.use("/roles", rbacRouter);
 app.use("/", healthRouter);
+
+// --- Centralized error handler (must be last) ---
+app.use(errorHandler);
 
 export default app;

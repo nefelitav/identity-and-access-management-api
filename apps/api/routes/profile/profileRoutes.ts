@@ -1,5 +1,11 @@
 import express from "express";
-import { ProfileController } from "~/controllers";
+import {
+  requestPasswordResetHandler,
+  resetPasswordHandler,
+  getUserHandler,
+  updateProfileHandler,
+  deleteUserHandler,
+} from "~/controllers/profile/profileController";
 import { authMiddleware } from "~/middleware";
 import { passwordResetLimiter } from "~/utils";
 
@@ -9,16 +15,16 @@ profileRouter.post(
   "/request-password-reset",
   authMiddleware,
   passwordResetLimiter,
-  ProfileController.requestPasswordReset,
+  requestPasswordResetHandler,
 );
 profileRouter.post(
   "/password-reset",
   authMiddleware,
   passwordResetLimiter,
-  ProfileController.resetPassword,
+  resetPasswordHandler,
 );
-profileRouter.get("/", authMiddleware, ProfileController.getUser);
-profileRouter.put("/", authMiddleware, ProfileController.updateProfile);
-profileRouter.delete("/", authMiddleware, ProfileController.deleteUser);
+profileRouter.get("/", authMiddleware, getUserHandler);
+profileRouter.put("/", authMiddleware, updateProfileHandler);
+profileRouter.delete("/", authMiddleware, deleteUserHandler);
 
 export { profileRouter };

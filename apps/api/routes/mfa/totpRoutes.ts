@@ -1,33 +1,23 @@
 import { Router } from "express";
-import { TotpController } from "~/controllers";
+import {
+  enableHandler,
+  confirmAndEnableHandler,
+  verifyHandler,
+  disableHandler,
+} from "~/controllers/mfa/totpController";
 import { totpSetupLimiter, totpVerifyLimiter } from "~/utils";
 import { authMiddleware } from "~/middleware";
 
 const totpRouter = Router();
 
-totpRouter.post(
-  "/enable",
-  authMiddleware,
-  totpSetupLimiter,
-  TotpController.enable,
-);
+totpRouter.post("/enable", authMiddleware, totpSetupLimiter, enableHandler);
 totpRouter.post(
   "/confirm",
   authMiddleware,
   totpSetupLimiter,
-  TotpController.confirmAndEnable,
+  confirmAndEnableHandler,
 );
-totpRouter.post(
-  "/verify",
-  authMiddleware,
-  totpVerifyLimiter,
-  TotpController.verify,
-);
-totpRouter.post(
-  "/disable",
-  authMiddleware,
-  totpSetupLimiter,
-  TotpController.disable,
-);
+totpRouter.post("/verify", authMiddleware, totpVerifyLimiter, verifyHandler);
+totpRouter.post("/disable", authMiddleware, totpSetupLimiter, disableHandler);
 
 export { totpRouter };

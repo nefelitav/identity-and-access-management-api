@@ -1,5 +1,12 @@
 import { Router } from "express";
-import { RbacController } from "~/controllers";
+import {
+  assignRoleHandler,
+  removeRoleHandler,
+  getRolesHandler,
+  getAllRolesHandler,
+  deleteRoleHandler,
+  createRoleHandler,
+} from "~/controllers/rbac/rbacController";
 import { adminWriteLimiter } from "~/utils";
 import { authMiddleware } from "~/middleware";
 
@@ -9,37 +16,22 @@ rbacRouter.post(
   "/assign",
   authMiddleware,
   adminWriteLimiter,
-  RbacController.assignRole,
+  assignRoleHandler,
 );
 rbacRouter.delete(
   "/remove",
   authMiddleware,
   adminWriteLimiter,
-  RbacController.removeRole,
+  removeRoleHandler,
 );
-rbacRouter.get(
-  "/:userId",
-  authMiddleware,
-  adminWriteLimiter,
-  RbacController.getRoles,
-);
-rbacRouter.get(
-  "/",
-  authMiddleware,
-  adminWriteLimiter,
-  RbacController.getAllRoles,
-);
+rbacRouter.get("/:userId", authMiddleware, adminWriteLimiter, getRolesHandler);
+rbacRouter.get("/", authMiddleware, adminWriteLimiter, getAllRolesHandler);
 rbacRouter.delete(
   "/delete",
   authMiddleware,
   adminWriteLimiter,
-  RbacController.deleteRole,
+  deleteRoleHandler,
 );
-rbacRouter.post(
-  "/add",
-  authMiddleware,
-  adminWriteLimiter,
-  RbacController.createRole,
-);
+rbacRouter.post("/add", authMiddleware, adminWriteLimiter, createRoleHandler);
 
 export { rbacRouter };

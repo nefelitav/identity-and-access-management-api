@@ -1,5 +1,10 @@
 import express from "express";
-import { AuthController } from "~/controllers";
+import {
+  registerHandler,
+  loginHandler,
+  logoutHandler,
+  refreshTokenHandler,
+} from "~/controllers/auth/authController";
 import { validateRequest } from "~/middleware";
 import {
   registerSchema,
@@ -20,28 +25,28 @@ authRouter.post(
   "/register",
   validateRequest(registerSchema),
   registerLimiter,
-  (req, res) => AuthController.register(req, res),
+  registerHandler,
 );
 
 authRouter.post(
   "/login",
   validateRequest(loginSchema),
   loginLimiter,
-  (req, res) => AuthController.login(req, res),
+  loginHandler,
 );
 
 authRouter.post(
   "/refresh-token",
   validateRequest(refreshTokenSchema),
   refreshLimiter,
-  (req, res) => AuthController.refreshToken(req, res),
+  refreshTokenHandler,
 );
 
 authRouter.post(
   "/logout",
   validateRequest(logoutSchema),
   logoutLimiter,
-  (req, res) => AuthController.logout(req, res),
+  logoutHandler,
 );
 
 export { authRouter };
