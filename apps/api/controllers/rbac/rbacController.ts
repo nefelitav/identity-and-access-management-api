@@ -4,7 +4,6 @@ import { createLogger } from "~/utils";
 
 const logger = createLogger("RbacController");
 
-/** Assign a role to a user. */
 export const assignRoleHandler = handleRequest(async (req) => {
   const { userId, role } = req.body;
   await rbacService.assignRoleToUser(userId, role);
@@ -13,7 +12,6 @@ export const assignRoleHandler = handleRequest(async (req) => {
   return { message: "Role assigned" };
 });
 
-/** Remove a role from a user. */
 export const removeRoleHandler = handleRequest(async (req) => {
   const { userId, role } = req.body;
   await rbacService.removeRoleFromUser(userId, role);
@@ -22,7 +20,6 @@ export const removeRoleHandler = handleRequest(async (req) => {
   return { message: "Role removed" };
 });
 
-/** Get all roles assigned to a specific user. */
 export const getRolesHandler = handleRequest(async (req) => {
   const { userId } = req.params;
   const roles = await rbacService.getUserRoles(userId);
@@ -31,7 +28,6 @@ export const getRolesHandler = handleRequest(async (req) => {
   return { roles };
 });
 
-/** Fetch all roles in the system. */
 export const getAllRolesHandler = handleRequest(async () => {
   const roles = await rbacService.getAllRoles();
 
@@ -39,7 +35,6 @@ export const getAllRolesHandler = handleRequest(async () => {
   return { roles };
 });
 
-/** Create a new role. */
 export const createRoleHandler = handleRequest(async (req) => {
   const { name } = req.body;
   const role = await rbacService.createRole(name);
@@ -48,7 +43,6 @@ export const createRoleHandler = handleRequest(async (req) => {
   return { role };
 });
 
-/** Delete an existing role by name. */
 export const deleteRoleHandler = handleRequest(async (req) => {
   const { name } = req.body;
   await rbacService.deleteRole(name);

@@ -1,14 +1,11 @@
-/** Opaque service identifier wrapping a unique symbol. */
 export interface ServiceIdentifier {
   readonly serviceIdentifier: symbol;
 }
 
-/** Create a new ServiceIdentifier. */
 export function createServiceIdentifier(name: string): ServiceIdentifier {
   return Object.freeze({ serviceIdentifier: Symbol(name) });
 }
 
-/** Dependency-injection container. */
 export interface Container {
   bind<T>(id: ServiceIdentifier, implementation: T): void;
   bindFactory<T>(id: ServiceIdentifier, factory: () => T): void;
@@ -17,7 +14,6 @@ export interface Container {
   get<T>(id: ServiceIdentifier): T;
 }
 
-/** Create a new DI container. */
 export function createContainer(): Container {
   const services = new Map<symbol, any>();
   const factories = new Map<symbol, () => any>();
@@ -58,19 +54,15 @@ export function createContainer(): Container {
   };
 }
 
-/** Global application container. */
 export const container = createContainer();
 
-/** Well-known service identifiers used throughout the app. */
 export const SERVICE_IDENTIFIERS = {
-  // Repositories
   UserRepository: createServiceIdentifier("UserRepository"),
   SessionRepository: createServiceIdentifier("SessionRepository"),
   RbacRepository: createServiceIdentifier("RbacRepository"),
   PermissionRepository: createServiceIdentifier("PermissionRepository"),
   TotpRepository: createServiceIdentifier("TotpRepository"),
 
-  // Services
   AuthService: createServiceIdentifier("AuthService"),
   SessionService: createServiceIdentifier("SessionService"),
   RbacService: createServiceIdentifier("RbacService"),
@@ -81,7 +73,6 @@ export const SERVICE_IDENTIFIERS = {
   ProfileService: createServiceIdentifier("ProfileService"),
   CaptchaService: createServiceIdentifier("CaptchaService"),
 
-  // Infrastructure
   DatabaseClient: createServiceIdentifier("DatabaseClient"),
   RedisClient: createServiceIdentifier("RedisClient"),
   Logger: createServiceIdentifier("Logger"),

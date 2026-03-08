@@ -5,7 +5,6 @@ import createLogger from "~/utils/createLogger";
 
 const logger = createLogger("AdminController");
 
-/** Fetch a single user by ID. */
 export const getUserHandler = handleRequest(async (req) => {
   const userId = req.params.id;
   const user = await profileService.getUser(userId);
@@ -13,7 +12,6 @@ export const getUserHandler = handleRequest(async (req) => {
   return user;
 });
 
-/** Fetch a paginated list of users with optional filtering and sorting. */
 export const getUsersHandler = handleRequest(async (req) => {
   const { page = 1, limit = 10, search, role, sortBy, sortOrder } = req.query;
 
@@ -30,14 +28,12 @@ export const getUsersHandler = handleRequest(async (req) => {
   return users;
 });
 
-/** Delete all users from the system. */
 export const deleteUsersHandler = handleRequest(async () => {
   await adminService.deleteUsers();
   logger.info("Deleted all users");
   return null;
 });
 
-/** Delete a single user by ID. */
 export const deleteUserHandler = handleRequest(async (req) => {
   const userId = req.params.id;
   await profileService.deleteUser(userId);
@@ -45,7 +41,6 @@ export const deleteUserHandler = handleRequest(async (req) => {
   return null;
 });
 
-/** Admin-level profile update for a specific user. */
 export const updateProfileHandler = handleRequest(async (req) => {
   const { email, password } = req.body;
   const userId = req.params.id;

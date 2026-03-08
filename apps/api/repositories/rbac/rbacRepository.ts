@@ -63,7 +63,6 @@ function buildOrderByClause(
   }
 }
 
-/** Create an RbacRepository backed by the given PrismaClient. */
 export function createRbacRepository(prisma: PrismaClient): RbacRepository {
   const base = createBaseRepository<
     Prisma.RoleGetPayload<{}>,

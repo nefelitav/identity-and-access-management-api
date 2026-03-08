@@ -11,7 +11,6 @@ function getTotpRepository() {
   return container.get<TotpRepository>(SERVICE_IDENTIFIERS.TotpRepository);
 }
 
-/** Generate a TOTP secret and QR code for initial setup. */
 export async function generateSecret(userId: string) {
   const repo = getTotpRepository();
   const secret = speakeasy.generateSecret({ name: `YourApp (${userId})` });
@@ -22,7 +21,6 @@ export async function generateSecret(userId: string) {
   return { secret: secret.base32, qrCode };
 }
 
-/** Confirm the token and permanently enable TOTP MFA. */
 export async function confirmAndEnable(
   userId: string,
   token: string,
@@ -45,7 +43,6 @@ export async function confirmAndEnable(
   return isValid;
 }
 
-/** Verify a TOTP token against the stored secret. */
 export async function verifyCode(
   userId: string,
   token: string,
@@ -78,7 +75,6 @@ export async function verifyCode(
   }
 }
 
-/** Disable TOTP MFA for a user. */
 export async function disable(userId: string) {
   const repo = getTotpRepository();
   await repo.disableMfa(userId);

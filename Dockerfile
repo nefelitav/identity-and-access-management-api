@@ -18,7 +18,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client & compile TypeScript
 RUN yarn workspace @repo/prisma prisma generate --schema=./prisma/schema.prisma
 RUN yarn workspace @repo/prisma build
 RUN yarn workspace @repo/api build
@@ -32,16 +31,13 @@ CMD ["yarn", "test"]
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install curl for the HEALTHCHECK directive
 RUN apk add --no-cache curl
 
 ENV NODE_ENV=production
 
-# Non-root user for security
 RUN addgroup --system --gid 1001 appgroup && \
     adduser  --system --uid 1001 appuser
 
-# Copy only what's needed to run
 COPY --from=builder /app/dist              ./dist
 COPY --from=builder /app/node_modules      ./node_modules
 COPY --from=builder /app/package.json      ./package.json

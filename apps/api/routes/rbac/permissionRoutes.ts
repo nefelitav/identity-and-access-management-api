@@ -13,7 +13,6 @@ import { authMiddleware, requireRole } from "~/middleware";
 
 const permissionRouter = Router();
 
-// All permission management routes require admin role
 permissionRouter.use(authMiddleware, requireRole("admin"));
 
 permissionRouter.get("/check", adminWriteLimiter, checkHandler);

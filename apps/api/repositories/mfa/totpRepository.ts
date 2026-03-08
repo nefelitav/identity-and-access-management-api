@@ -71,7 +71,6 @@ function buildOrderByClause(
   }
 }
 
-/** Create a TotpRepository backed by the given PrismaClient. */
 export function createTotpRepository(prisma: PrismaClient): TotpRepository {
   const base = createBaseRepository<
     Prisma.MfaSecretGetPayload<{}>,

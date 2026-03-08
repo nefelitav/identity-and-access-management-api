@@ -4,7 +4,6 @@ import { sendEmail, sendSms } from "~/utils";
 
 const CODE_TTL_SECONDS = 300; // 5 minutes
 
-/** Generate a one-time code and email it to the user. */
 export async function generateAndSendCodeViaEmail(
   userId: string,
   email: string,
@@ -17,7 +16,6 @@ export async function generateAndSendCodeViaEmail(
   });
 }
 
-/** Generate a one-time code and send it via SMS. */
 export async function generateAndSendCodeViaSms(
   userId: string,
   phone: string,
@@ -29,14 +27,12 @@ export async function generateAndSendCodeViaSms(
   });
 }
 
-/** Generate a 6-digit OTP and store it in Redis. */
 export async function generateCode(userId: string): Promise<string> {
   const code = crypto.randomInt(100000, 999999).toString();
   await redis.setEx(`mfa_code:${userId}`, CODE_TTL_SECONDS, code);
   return code;
 }
 
-/** Verify a submitted OTP code against the stored value. */
 export async function verifyCode(
   userId: string,
   inputCode: string,

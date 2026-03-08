@@ -4,7 +4,6 @@ import { createLogger } from "~/utils";
 
 const logger = createLogger("CaptchaController");
 
-/** Verify a reCAPTCHA token. */
 export const verifyHandler = handleRequest(async (req) => {
   const { token } = req.body;
   const result = await verifyCaptcha(token, req.ip);

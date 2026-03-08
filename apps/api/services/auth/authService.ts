@@ -224,7 +224,6 @@ export async function refreshToken(refreshTokenValue: string) {
   return { accessToken: newAccessToken };
 }
 
-/** Complete login after MFA verification. */
 export async function verifyMfaLogin({
   mfaToken,
   code,
@@ -253,7 +252,6 @@ export async function verifyMfaLogin({
     throw InvalidCredentialsException();
   }
 
-  // Import verifyCode dynamically to avoid circular dependency
   const { verifyCode } = await import("~/services/mfa/totpService");
   const isValid = await verifyCode(payload.userId, code);
   if (!isValid) {

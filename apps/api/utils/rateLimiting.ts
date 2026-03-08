@@ -1,11 +1,10 @@
 import rateLimit from "express-rate-limit";
 
-/** Skip rate limiting in test environment */
 const isTest = process.env.NODE_ENV === "test";
 
 export const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // max requests
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   skip: () => isTest,
   message: {
     success: false,
@@ -16,8 +15,8 @@ export const loginLimiter = rateLimit({
 });
 
 export const registerLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // max 5 registrations per IP per hour
+  windowMs: 60 * 60 * 1000,
+  max: 5,
   skip: () => isTest,
   message: {
     success: false,
@@ -29,7 +28,7 @@ export const registerLimiter = rateLimit({
 });
 
 export const refreshLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
+  windowMs: 60 * 60 * 1000,
   max: 50,
   skip: () => isTest,
   message: {
@@ -41,7 +40,7 @@ export const refreshLimiter = rateLimit({
 });
 
 export const logoutLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: 10,
   skip: () => isTest,
   message: {
@@ -51,8 +50,8 @@ export const logoutLimiter = rateLimit({
 });
 
 export const captchaLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 10, // max 10 requests per window per IP
+  windowMs: 10 * 60 * 1000,
+  max: 10,
   skip: () => isTest,
   message: {
     success: false,
@@ -63,8 +62,8 @@ export const captchaLimiter = rateLimit({
 });
 
 export const otpRequestLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // max 5 OTP requests per IP per hour
+  windowMs: 60 * 60 * 1000,
+  max: 5,
   skip: () => isTest,
   message: {
     success: false,
@@ -75,8 +74,8 @@ export const otpRequestLimiter = rateLimit({
 });
 
 export const otpVerifyLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // max 5 verification attempts per IP
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   skip: () => isTest,
   message: {
     success: false,
@@ -89,8 +88,8 @@ export const otpVerifyLimiter = rateLimit({
 });
 
 export const totpSetupLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // max 5 setup attempts
+  windowMs: 60 * 60 * 1000,
+  max: 5,
   skip: () => isTest,
   message: {
     success: false,
@@ -99,8 +98,8 @@ export const totpSetupLimiter = rateLimit({
 });
 
 export const totpVerifyLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // max 5 verification attempts
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   skip: () => isTest,
   message: {
     success: false,
@@ -109,7 +108,7 @@ export const totpVerifyLimiter = rateLimit({
 });
 
 export const passwordResetLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
+  windowMs: 60 * 60 * 1000,
   max: 3,
   skip: () => isTest,
   message: {
@@ -119,7 +118,7 @@ export const passwordResetLimiter = rateLimit({
 });
 
 export const adminWriteLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: 20,
   skip: () => isTest,
   message: {

@@ -26,17 +26,12 @@ const ERROR_CODE_MAP: Record<string, string> = {
   UserMustHaveAtLeastOneRoleException: "RBAC_MIN_ONE_ROLE",
 };
 
-/**
- * Centralized Express error handler.
- * Must be registered AFTER all routes with `app.use(errorHandler)`.
- */
 export function errorHandler(
   err: AppError,
   req: Request,
   res: Response,
   _next: NextFunction,
 ): void {
-  // Zod validation errors
   if (err instanceof ZodError) {
     res.status(400).json({
       success: false,
@@ -58,7 +53,6 @@ export function errorHandler(
     ERROR_CODE_MAP[err.name] ??
     (statusCode >= 500 ? "INTERNAL_ERROR" : "REQUEST_ERROR");
 
-  // Log server errors fully; client errors at warn level
   if (statusCode >= 500) {
     logger.error(`${req.method} ${req.path} — ${err.message}`, err);
   } else {

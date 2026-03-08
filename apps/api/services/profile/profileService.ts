@@ -11,7 +11,6 @@ function getUserRepository() {
   return container.get<UserRepository>(SERVICE_IDENTIFIERS.UserRepository);
 }
 
-/** Update a user's profile (email / password). */
 export async function updateProfile({
   userId,
   email,
@@ -27,7 +26,6 @@ export async function updateProfile({
   const user = await userRepository.findById(userId);
   if (!user) throw UserNotFoundException();
 
-  // Check email uniqueness before updating
   if (email && email !== user.email) {
     const exists = await userRepository.existsByEmail(email);
     if (exists) {
@@ -51,7 +49,6 @@ export async function updateProfile({
   };
 }
 
-/** Delete a user and all their sessions. */
 export async function deleteUser(userId?: string) {
   if (!userId) throw UserNotFoundException();
 
@@ -62,7 +59,6 @@ export async function deleteUser(userId?: string) {
   await sessionService.deleteAllSessions(userId);
 }
 
-/** Send a password-reset email with a unique token. */
 export async function requestPasswordReset(email: string) {
   const userRepository = getUserRepository();
   const user = await userRepository.findByEmail(email);
@@ -78,7 +74,6 @@ export async function requestPasswordReset(email: string) {
   });
 }
 
-/** Reset a user's password using a valid reset token. */
 export async function resetPassword(resetToken: string, newPassword: string) {
   const userId = await verifyResetToken(resetToken);
   if (!userId) throw UserNotFoundException();
@@ -90,7 +85,6 @@ export async function resetPassword(resetToken: string, newPassword: string) {
   await invalidateResetToken(resetToken);
 }
 
-/** Fetch a user by ID. */
 export async function getUser(userId?: string) {
   if (!userId) throw UserNotFoundException();
 

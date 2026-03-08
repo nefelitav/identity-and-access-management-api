@@ -4,7 +4,6 @@ import { createLogger } from "~/utils";
 
 const logger = createLogger("PermissionController");
 
-/** Check whether a user has a specific permission. */
 export const checkHandler = handleRequest(async (req) => {
   const { userId, permission } = req.query;
   const allowed = await permissionService.checkPermission(
@@ -18,7 +17,6 @@ export const checkHandler = handleRequest(async (req) => {
   return { allowed };
 });
 
-/** Grant a permission to a role. */
 export const grantHandler = handleRequest(async (req) => {
   const { userId, permission } = req.body;
   await permissionService.grantPermission(userId, permission);
@@ -27,7 +25,6 @@ export const grantHandler = handleRequest(async (req) => {
   return { message: "Permission granted" };
 });
 
-/** Revoke a permission from a role. */
 export const revokeHandler = handleRequest(async (req) => {
   const { userId, permission } = req.body;
   await permissionService.revokePermissionFromRole(userId, permission);
@@ -36,7 +33,6 @@ export const revokeHandler = handleRequest(async (req) => {
   return { message: "Permission revoked" };
 });
 
-/** Fetch all permissions in the system. */
 export const getAllPermissionsHandler = handleRequest(async () => {
   const permissions = await permissionService.getAllPermissions();
 
@@ -44,7 +40,6 @@ export const getAllPermissionsHandler = handleRequest(async () => {
   return { permissions };
 });
 
-/** Get all permissions assigned to a user through their roles. */
 export const getUserPermissionsHandler = handleRequest(async (req) => {
   const { userId } = req.params;
   const userPermissions = await permissionService.getUserPermissions(userId);
@@ -58,7 +53,6 @@ export const getUserPermissionsHandler = handleRequest(async (req) => {
   return { permissions };
 });
 
-/** Add a new permission to the system. */
 export const addPermissionHandler = handleRequest(async (req) => {
   const { name } = req.body;
   await permissionService.addPermission(name);
@@ -67,7 +61,6 @@ export const addPermissionHandler = handleRequest(async (req) => {
   return { message: "Permission added" };
 });
 
-/** Delete an existing permission by name. */
 export const deletePermissionHandler = handleRequest(async (req) => {
   const { name } = req.body;
   await permissionService.deletePermission(name);
