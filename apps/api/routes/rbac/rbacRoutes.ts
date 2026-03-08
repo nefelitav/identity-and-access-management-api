@@ -12,7 +12,6 @@ import { authMiddleware, requireRole } from "~/middleware";
 
 const rbacRouter = Router();
 
-// All RBAC management routes require admin role
 rbacRouter.use(authMiddleware, requireRole("admin"));
 
 rbacRouter.post("/assign", adminWriteLimiter, assignRoleHandler);

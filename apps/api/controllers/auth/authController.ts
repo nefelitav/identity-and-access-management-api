@@ -54,7 +54,6 @@ export const refreshTokenHandler = handleRequest(async (req) => {
   return await authService.refreshToken(refreshToken);
 });
 
-/** Verify MFA code after login returned mfaRequired: true. */
 export const verifyMfaLoginHandler = handleRequest(async (req) => {
   const { mfaToken, code } = req.body;
   const userAgent = extractUserAgent(req);

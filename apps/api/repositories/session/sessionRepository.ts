@@ -17,7 +17,6 @@ export interface SessionRepository {
   updateLastActive(sessionId: string): Promise<any>;
 }
 
-/** Create a SessionRepository backed by the given PrismaClient. */
 export function createSessionRepository(
   prisma: PrismaClient,
 ): SessionRepository {

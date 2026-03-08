@@ -5,7 +5,6 @@ import { InvalidOtpTokenException } from "~/exceptions";
 
 const logger = createLogger("OtpController");
 
-/** Send a one-time password to the user's email. */
 export const requestCodeInEmailHandler = handleRequest(async (req) => {
   const userId = req.user!.userId;
   const { email } = req.body;
@@ -15,7 +14,6 @@ export const requestCodeInEmailHandler = handleRequest(async (req) => {
   return { message: "Verification code sent" };
 });
 
-/** Send a one-time password via SMS. */
 export const requestCodeInSmsHandler = handleRequest(async (req) => {
   const userId = req.user!.userId;
   const { phone } = req.body;
@@ -25,7 +23,6 @@ export const requestCodeInSmsHandler = handleRequest(async (req) => {
   return { message: "Verification code sent" };
 });
 
-/** Verify a submitted OTP code. */
 export const verifyCodeHandler = handleRequest(async (req) => {
   const userId = req.user!.userId;
   const { code } = req.body;

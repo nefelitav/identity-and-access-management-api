@@ -63,7 +63,6 @@ export async function authMiddleware(
       return;
     }
 
-    // Verify the session still exists in the database
     try {
       const sessionRepository = container.get<SessionRepository>(
         SERVICE_IDENTIFIERS.SessionRepository,
@@ -79,10 +78,7 @@ export async function authMiddleware(
         });
         return;
       }
-    } catch {
-      // If the container/repo isn't available (e.g. in unit tests that only
-      // mock JWT), fall through and allow the request.
-    }
+    } catch {}
 
     req.user = decoded;
     next();

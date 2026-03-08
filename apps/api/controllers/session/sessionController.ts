@@ -4,7 +4,6 @@ import { createLogger } from "~/utils";
 
 const logger = createLogger("SessionController");
 
-/** List all active sessions for the authenticated user. */
 export const listSessionsHandler = handleRequest(async (req) => {
   const userId = req.user?.userId;
   const sessionService = createSessionService();
@@ -23,7 +22,6 @@ export const listSessionsHandler = handleRequest(async (req) => {
   };
 });
 
-/** Delete a specific session by ID. */
 export const deleteSessionHandler = handleRequest(async (req) => {
   const { sessionId } = req.params;
   const sessionService = createSessionService();
@@ -33,7 +31,6 @@ export const deleteSessionHandler = handleRequest(async (req) => {
   return { message: "Session deleted" };
 });
 
-/** Delete all sessions for the authenticated user. */
 export const deleteAllSessionsHandler = handleRequest(async (req) => {
   const userId = req.user?.userId;
   const sessionService = createSessionService();

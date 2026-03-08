@@ -81,7 +81,6 @@ function buildOrderByClause(
   }
 }
 
-/** Create a UserRepository backed by the given PrismaClient. */
 export function createUserRepository(prisma: PrismaClient): UserRepository {
   const base = createBaseRepository<
     Prisma.UserGetPayload<{}>,

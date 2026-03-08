@@ -10,7 +10,6 @@ export interface CaptchaVerificationResult {
   errorCodes?: string[];
 }
 
-/** Verify a reCAPTCHA token with Google's API. */
 export async function verifyCaptcha(
   token: string,
   remoteIp?: string,

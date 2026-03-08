@@ -44,7 +44,6 @@ authRouter.post(
 
 authRouter.post("/logout", authMiddleware, logoutLimiter, logoutHandler);
 
-/** Complete login when MFA is required (no auth — uses short-lived mfaToken). */
 authRouter.post("/mfa-verify", loginLimiter, verifyMfaLoginHandler);
 
 export { authRouter };

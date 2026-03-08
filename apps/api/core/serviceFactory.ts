@@ -9,7 +9,6 @@ import { createLogger } from "~/utils";
 
 let initialized = false;
 
-/** Register all application dependencies in the DI container. */
 export function initializeServices(): void {
   if (initialized) return;
 

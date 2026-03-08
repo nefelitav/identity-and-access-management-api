@@ -13,7 +13,6 @@ export interface PermissionsRepository {
   deletePermission(name: string): Promise<any>;
 }
 
-/** Create a PermissionsRepository backed by the given PrismaClient. */
 export function createPermissionsRepository(
   prisma: PrismaClient,
 ): PermissionsRepository {

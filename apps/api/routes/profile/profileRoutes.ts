@@ -12,7 +12,6 @@ import { passwordResetLimiter } from "~/utils";
 
 const profileRouter = express.Router();
 
-// Public — user who forgot password can't authenticate
 profileRouter.post(
   "/request-password-reset",
   passwordResetLimiter,
@@ -24,7 +23,6 @@ profileRouter.post(
   resetPasswordHandler,
 );
 
-// Authenticated
 profileRouter.get("/", authMiddleware, getUserHandler);
 profileRouter.put(
   "/",

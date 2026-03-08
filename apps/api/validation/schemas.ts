@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Common validation schemas
 export const emailSchema = z
   .string()
   .email("Invalid email format")
@@ -31,7 +30,6 @@ export const paginationSchema = z.object({
     .refine((val) => val > 0 && val <= 100, "Limit must be between 1 and 100"),
 });
 
-// Auth validation schemas
 export const registerSchema = z.object({
   body: z.object({
     email: emailSchema,
@@ -80,7 +78,6 @@ export const deleteUserSchema = z.object({
   }),
 });
 
-// Admin validation schemas
 export const adminUpdateProfileSchema = z.object({
   params: z.object({
     id: uuidSchema,

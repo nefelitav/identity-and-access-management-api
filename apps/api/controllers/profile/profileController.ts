@@ -4,7 +4,6 @@ import { createLogger } from "~/utils";
 
 const logger = createLogger("ProfileController");
 
-/** Update the authenticated user's profile (email / password). */
 export const updateProfileHandler = handleRequest(async (req) => {
   const { email, password } = req.body;
   const userId = req.user?.userId;
@@ -19,7 +18,6 @@ export const updateProfileHandler = handleRequest(async (req) => {
   return updatedUser;
 });
 
-/** Delete the authenticated user's account. */
 export const deleteUserHandler = handleRequest(async (req) => {
   const userId = req.user?.userId;
   await profileService.deleteUser(userId);
@@ -28,7 +26,6 @@ export const deleteUserHandler = handleRequest(async (req) => {
   return { message: "User deleted" };
 });
 
-/** Request a password-reset email. */
 export const requestPasswordResetHandler = handleRequest(async (req) => {
   const { email } = req.body;
   await profileService.requestPasswordReset(email);
@@ -37,7 +34,6 @@ export const requestPasswordResetHandler = handleRequest(async (req) => {
   return { message: "Password reset request sent" };
 });
 
-/** Reset password using a valid reset token. */
 export const resetPasswordHandler = handleRequest(async (req) => {
   const { resetToken, newPassword } = req.body;
   await profileService.resetPassword(resetToken, newPassword);
@@ -46,7 +42,6 @@ export const resetPasswordHandler = handleRequest(async (req) => {
   return { message: "Password reset successfully" };
 });
 
-/** Fetch the authenticated user's profile. */
 export const getUserHandler = handleRequest(async (req) => {
   const userId = req.user?.userId;
   const user = await profileService.getUser(userId);

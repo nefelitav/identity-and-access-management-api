@@ -15,39 +15,30 @@ export const config = cleanEnv(process.env, {
   }),
   PORT: num({ default: 3000 }),
 
-  // Database
   DATABASE_URL: url(),
 
-  // JWT
   JWT_SECRET: minLengthString(32)(),
-  /** Access-token lifetime in seconds (default: 15 minutes). */
   JWT_EXPIRY: num({ default: 900 }),
 
-  // Redis
   REDIS_URL: url({ default: "redis://localhost:6379" }),
 
-  // Email
   SMTP_HOST: str({ default: "localhost" }),
   SMTP_PORT: num({ default: 587 }),
   SMTP_USER: str({ default: "" }),
   SMTP_PASS: str({ default: "" }),
   SMTP_FROM: str({ default: "noreply@example.com" }),
 
-  // SMS
   TWILIO_ACCOUNT_SID: str({ default: "" }),
   TWILIO_AUTH_TOKEN: str({ default: "" }),
   TWILIO_PHONE_NUMBER: str({ default: "" }),
 
-  // Captcha
   RECAPTCHA_SECRET_KEY: str({ default: "" }),
   RECAPTCHA_SITE_KEY: str({ default: "" }),
 
-  // Security
   CORS_ORIGIN: str({ default: "http://localhost:3000" }),
-  RATE_LIMIT_WINDOW_MS: num({ default: 15 * 60 * 1000 }), // 15 minutes
+  RATE_LIMIT_WINDOW_MS: num({ default: 15 * 60 * 1000 }),
   RATE_LIMIT_MAX_REQUESTS: num({ default: 100 }),
 
-  // Session
   SESSION_SECRET: minLengthString(32)(),
 });
 

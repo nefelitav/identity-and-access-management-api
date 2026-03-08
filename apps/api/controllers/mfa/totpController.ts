@@ -5,7 +5,6 @@ import { InvalidTotpTokenException } from "~/exceptions";
 
 const logger = createLogger("TotpController");
 
-/** Begin TOTP setup by generating a secret and QR code. */
 export const enableHandler = handleRequest(async (req) => {
   const userId = req.user?.userId || req.body.userId;
   if (!userId) throw new Error("User ID not found");
@@ -15,7 +14,6 @@ export const enableHandler = handleRequest(async (req) => {
   return { secret, qrCode };
 }, ResponseCode.CREATED);
 
-/** Confirm TOTP token and activate MFA for the user. */
 export const confirmAndEnableHandler = handleRequest(async (req) => {
   const userId = req.user?.userId || req.body.userId;
   const { token } = req.body;
@@ -31,7 +29,6 @@ export const confirmAndEnableHandler = handleRequest(async (req) => {
   return { success };
 });
 
-/** Verify a TOTP token during login or sensitive operations. */
 export const verifyHandler = handleRequest(async (req) => {
   const userId = req.user?.userId || req.body.userId;
   const { token } = req.body;
@@ -47,7 +44,6 @@ export const verifyHandler = handleRequest(async (req) => {
   return { isValid };
 });
 
-/** Disable TOTP MFA for the user. */
 export const disableHandler = handleRequest(async (req) => {
   const userId = req.user?.userId || req.body.userId;
   if (!userId) throw new Error("User ID not found");
