@@ -8,30 +8,18 @@ import {
   createRoleHandler,
 } from "~/controllers/rbac/rbacController";
 import { adminWriteLimiter } from "~/utils";
-import { authMiddleware } from "~/middleware";
+import { authMiddleware, requireRole } from "~/middleware";
 
 const rbacRouter = Router();
 
-rbacRouter.post(
-  "/assign",
-  authMiddleware,
-  adminWriteLimiter,
-  assignRoleHandler,
-);
-rbacRouter.delete(
-  "/remove",
-  authMiddleware,
-  adminWriteLimiter,
-  removeRoleHandler,
-);
-rbacRouter.get("/:userId", authMiddleware, adminWriteLimiter, getRolesHandler);
-rbacRouter.get("/", authMiddleware, adminWriteLimiter, getAllRolesHandler);
-rbacRouter.delete(
-  "/delete",
-  authMiddleware,
-  adminWriteLimiter,
-  deleteRoleHandler,
-);
-rbacRouter.post("/add", authMiddleware, adminWriteLimiter, createRoleHandler);
+// All RBAC management routes require admin role
+rbacRouter.use(authMiddleware, requireRole("admin"));
+
+rbacRouter.post("/assign", adminWriteLimiter, assignRoleHandler);
+rbacRouter.delete("/remove", adminWriteLimiter, removeRoleHandler);
+rbacRouter.get("/:userId", adminWriteLimiter, getRolesHandler);
+rbacRouter.get("/", adminWriteLimiter, getAllRolesHandler);
+rbacRouter.delete("/delete", adminWriteLimiter, deleteRoleHandler);
+rbacRouter.post("/add", adminWriteLimiter, createRoleHandler);
 
 export { rbacRouter };

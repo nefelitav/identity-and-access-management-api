@@ -1,3 +1,4 @@
+import { PrismaClient } from "@prisma/client";
 import { container, SERVICE_IDENTIFIERS } from "~/core";
 import { UserRepository } from "~/repositories";
 
@@ -22,9 +23,8 @@ export async function getUsers(params: GetUsersParams) {
 
 /** Delete all users from the system. */
 export async function deleteUsers() {
-  const userRepository = getUserRepository();
-  const users = await userRepository.findMany({ page: 1, limit: 1000 });
-  for (const user of users.data) {
-    await userRepository.delete(user.id);
-  }
+  const prisma = container.get<PrismaClient>(
+    SERVICE_IDENTIFIERS.DatabaseClient,
+  );
+  await prisma.user.deleteMany();
 }

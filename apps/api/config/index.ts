@@ -20,7 +20,8 @@ export const config = cleanEnv(process.env, {
 
   // JWT
   JWT_SECRET: minLengthString(32)(),
-  JWT_EXPIRY: num({ default: 1 }),
+  /** Access-token lifetime in seconds (default: 15 minutes). */
+  JWT_EXPIRY: num({ default: 900 }),
 
   // Redis
   REDIS_URL: url({ default: "redis://localhost:6379" }),

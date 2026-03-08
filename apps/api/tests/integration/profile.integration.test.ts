@@ -80,8 +80,9 @@ describe("PUT /profile", () => {
 
   it("should return 200 on valid profile update", async () => {
     mockProfileService.updateProfile.mockResolvedValue({
-      accessToken: "at",
-      refreshToken: "rt",
+      id: "u1",
+      email: "new@test.com",
+      updatedAt: new Date().toISOString(),
     } as any);
 
     const res = await request(app)
@@ -113,18 +114,11 @@ describe("DELETE /profile", () => {
 });
 
 describe("POST /profile/request-password-reset", () => {
-  it("should return 401 without auth token", async () => {
-    const res = await request(app).post("/profile/request-password-reset");
-
-    expect(res.status).toBe(401);
-  });
-
-  it("should return 200 on success", async () => {
+  it("should return 200 on success (public endpoint)", async () => {
     mockProfileService.requestPasswordReset.mockResolvedValue(undefined);
 
     const res = await request(app)
       .post("/profile/request-password-reset")
-      .set("Authorization", `Bearer ${validToken}`)
       .send({ email: "test@test.com" });
 
     expect(res.status).toBe(200);
@@ -132,18 +126,11 @@ describe("POST /profile/request-password-reset", () => {
 });
 
 describe("POST /profile/password-reset", () => {
-  it("should return 401 without auth token", async () => {
-    const res = await request(app).post("/profile/password-reset");
-
-    expect(res.status).toBe(401);
-  });
-
-  it("should return 200 on success", async () => {
+  it("should return 200 on success (public endpoint)", async () => {
     mockProfileService.resetPassword.mockResolvedValue(undefined);
 
     const res = await request(app)
       .post("/profile/password-reset")
-      .set("Authorization", `Bearer ${validToken}`)
       .send({ token: "reset-token", newPassword: "NewPass1234!" });
 
     expect(res.status).toBe(200);

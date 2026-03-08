@@ -64,7 +64,7 @@ describe("deleteSessionHandler", () => {
   it("should delete a session by ID", async () => {
     mockService.deleteSession.mockResolvedValue(undefined);
 
-    const req = createMockReq({ body: { params: { sessionId: "s1" } } });
+    const req = createMockReq({ params: { sessionId: "s1" } });
     const res = createMockRes();
     const next = createMockNext();
 

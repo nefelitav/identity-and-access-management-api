@@ -1,8 +1,4 @@
-import {
-  handleRequest,
-  extractUserAgent,
-  extractIpAddress,
-} from "~/controllers/base/baseController";
+import { handleRequest } from "~/controllers/base/baseController";
 import * as adminService from "~/services/admin/adminService";
 import * as profileService from "~/services/profile/profileService";
 import createLogger from "~/utils/createLogger";
@@ -53,15 +49,11 @@ export const deleteUserHandler = handleRequest(async (req) => {
 export const updateProfileHandler = handleRequest(async (req) => {
   const { email, password } = req.body;
   const userId = req.params.id;
-  const userAgent = extractUserAgent(req);
-  const ip = extractIpAddress(req);
 
   const updatedUser = await profileService.updateProfile({
     userId,
     email,
     password,
-    userAgent,
-    ip,
   });
 
   logger.info(`Admin updated profile for user with ID: ${userId}`);

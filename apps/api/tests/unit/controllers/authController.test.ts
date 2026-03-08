@@ -10,7 +10,6 @@ jest.mock("~/utils", () => ({
 }));
 
 jest.mock("~/services/auth/authService");
-jest.mock("jsonwebtoken");
 
 import {
   createMockReq,
@@ -18,7 +17,6 @@ import {
   createMockNext,
 } from "../../helpers/mockHelpers";
 import * as authService from "~/services/auth/authService";
-import jwt from "jsonwebtoken";
 import {
   registerHandler,
   loginHandler,
@@ -92,38 +90,35 @@ describe("loginHandler", () => {
 });
 
 describe("logoutHandler", () => {
-  it("should return 401 via next when no authorization header", async () => {
-    const req = createMockReq({ headers: {} });
-    const res = createMockRes();
-    const next = createMockNext();
-
-    await logoutHandler(req, res, next);
-
-    expect(next).toHaveBeenCalled();
-    const err = next.mock.calls[0][0];
-    expect(err).toBeDefined();
-    expect(err.statusCode).toBe(401);
-  });
-
-  it("should verify JWT and call authService.logout", async () => {
-    (jwt.verify as jest.Mock).mockReturnValue({
-      sessionId: "s1",
-      userId: "u1",
-    });
+  it("should call authService.logout with sessionId and userId from req.user", async () => {
     (authService.logout as jest.Mock).mockResolvedValue(undefined);
 
     const req = createMockReq({
-      headers: { authorization: "Bearer some-token" },
-    });
+      user: { sessionId: "s1", userId: "u1" },
+    } as any);
     const res = createMockRes();
     const next = createMockNext();
 
     await logoutHandler(req, res, next);
 
-    expect(jwt.verify).toHaveBeenCalledWith("some-token", "test-secret");
     expect(authService.logout).toHaveBeenCalledWith({
       sessionId: "s1",
       userId: "u1",
+    });
+  });
+
+  it("should call authService.logout with undefined when no user", async () => {
+    (authService.logout as jest.Mock).mockResolvedValue(undefined);
+
+    const req = createMockReq({});
+    const res = createMockRes();
+    const next = createMockNext();
+
+    await logoutHandler(req, res, next);
+
+    expect(authService.logout).toHaveBeenCalledWith({
+      sessionId: undefined,
+      userId: undefined,
     });
   });
 });

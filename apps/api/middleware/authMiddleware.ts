@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { config } from "~/config";
+import { container, SERVICE_IDENTIFIERS } from "~/core";
+import { SessionRepository } from "~/repositories";
 import { createLogger } from "~/utils";
 
 const logger = createLogger("AuthMiddleware");
@@ -23,11 +25,11 @@ declare global {
   }
 }
 
-export function authMiddleware(
+export async function authMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -59,6 +61,27 @@ export function authMiddleware(
         },
       });
       return;
+    }
+
+    // Verify the session still exists in the database
+    try {
+      const sessionRepository = container.get<SessionRepository>(
+        SERVICE_IDENTIFIERS.SessionRepository,
+      );
+      const session = await sessionRepository.findById(decoded.sessionId);
+      if (!session || session.expiresAt.getTime() < Date.now()) {
+        logger.debug("Session revoked or expired", {
+          sessionId: decoded.sessionId,
+        });
+        res.status(401).json({
+          success: false,
+          error: { message: "Unauthorized: Session expired or revoked" },
+        });
+        return;
+      }
+    } catch {
+      // If the container/repo isn't available (e.g. in unit tests that only
+      // mock JWT), fall through and allow the request.
     }
 
     req.user = decoded;

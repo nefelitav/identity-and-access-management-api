@@ -6,25 +6,32 @@ import {
   updateProfileHandler,
   deleteUserHandler,
 } from "~/controllers/profile/profileController";
-import { authMiddleware } from "~/middleware";
+import { authMiddleware, validateRequest } from "~/middleware";
+import { updateProfileSchema } from "~/validation/schemas";
 import { passwordResetLimiter } from "~/utils";
 
 const profileRouter = express.Router();
 
+// Public — user who forgot password can't authenticate
 profileRouter.post(
   "/request-password-reset",
-  authMiddleware,
   passwordResetLimiter,
   requestPasswordResetHandler,
 );
 profileRouter.post(
   "/password-reset",
-  authMiddleware,
   passwordResetLimiter,
   resetPasswordHandler,
 );
+
+// Authenticated
 profileRouter.get("/", authMiddleware, getUserHandler);
-profileRouter.put("/", authMiddleware, updateProfileHandler);
+profileRouter.put(
+  "/",
+  authMiddleware,
+  validateRequest(updateProfileSchema),
+  updateProfileHandler,
+);
 profileRouter.delete("/", authMiddleware, deleteUserHandler);
 
 export { profileRouter };

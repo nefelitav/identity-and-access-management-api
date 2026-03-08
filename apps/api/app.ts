@@ -1,6 +1,8 @@
 import "module-alias/register";
 import express from "express";
 import dotenv from "dotenv";
+import helmet from "helmet";
+import cors from "cors";
 import {
   adminRouter,
   authRouter,
@@ -17,6 +19,15 @@ import { errorHandler } from "~/middleware";
 
 dotenv.config();
 const app = express();
+
+// --- Security headers ---
+app.use(helmet());
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 

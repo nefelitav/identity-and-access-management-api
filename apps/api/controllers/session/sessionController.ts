@@ -25,7 +25,7 @@ export const listSessionsHandler = handleRequest(async (req) => {
 
 /** Delete a specific session by ID. */
 export const deleteSessionHandler = handleRequest(async (req) => {
-  const { sessionId } = req.body.params;
+  const { sessionId } = req.params;
   const sessionService = createSessionService();
   await sessionService.deleteSession(sessionId);
 

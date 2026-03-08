@@ -79,7 +79,7 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/identity_forge
 
 # JWT
 JWT_SECRET=your-jwt-secret-key-at-least-32-characters-long
-JWT_EXPIRY=15
+JWT_EXPIRY=900        # Access token lifetime in seconds (900 = 15 minutes)
 
 # Redis
 REDIS_URL=redis://localhost:6379
@@ -131,12 +131,13 @@ The API will be available at `http://localhost:3000`.
 
 ### Authentication (`/auth`)
 
-| Method | Path                  | Auth   | Description                   |
-| ------ | --------------------- | ------ | ----------------------------- |
-| `POST` | `/auth/register`      | —      | Create a new account          |
-| `POST` | `/auth/login`         | —      | Authenticate & receive tokens |
-| `POST` | `/auth/logout`        | Bearer | Invalidate session(s)         |
-| `POST` | `/auth/refresh-token` | —      | Refresh an access token       |
+| Method | Path                  | Auth   | Description                         |
+| ------ | --------------------- | ------ | ----------------------------------- |
+| `POST` | `/auth/register`      | —      | Create a new account                |
+| `POST` | `/auth/login`         | —      | Authenticate & receive tokens       |
+| `POST` | `/auth/logout`        | Bearer | Invalidate current session          |
+| `POST` | `/auth/refresh-token` | —      | Refresh an access token             |
+| `POST` | `/auth/mfa-verify`    | —      | Complete login when MFA is required |
 
 ### Profile (`/profile`)
 
@@ -145,18 +146,18 @@ The API will be available at `http://localhost:3000`.
 | `GET`    | `/profile`                        | Bearer | Get current user profile  |
 | `PUT`    | `/profile`                        | Bearer | Update email / password   |
 | `DELETE` | `/profile`                        | Bearer | Delete account            |
-| `POST`   | `/profile/request-password-reset` | Bearer | Send password reset email |
-| `POST`   | `/profile/password-reset`         | Bearer | Reset password with token |
+| `POST`   | `/profile/request-password-reset` | —      | Send password reset email |
+| `POST`   | `/profile/password-reset`         | —      | Reset password with token |
 
 ### Admin (`/admin`)
 
-| Method   | Path               | Auth   | Description            |
-| -------- | ------------------ | ------ | ---------------------- |
-| `GET`    | `/admin/users`     | Bearer | List users (paginated) |
-| `GET`    | `/admin/users/:id` | Bearer | Get user by ID         |
-| `PUT`    | `/admin/users/:id` | Bearer | Update a user          |
-| `DELETE` | `/admin/users/:id` | Bearer | Delete a user          |
-| `DELETE` | `/admin/users`     | Bearer | Delete all users       |
+| Method   | Path               | Auth           | Description            |
+| -------- | ------------------ | -------------- | ---------------------- |
+| `GET`    | `/admin/users`     | Bearer + Admin | List users (paginated) |
+| `GET`    | `/admin/users/:id` | Bearer + Admin | Get user by ID         |
+| `PUT`    | `/admin/users/:id` | Bearer + Admin | Update a user          |
+| `DELETE` | `/admin/users/:id` | Bearer + Admin | Delete a user          |
+| `DELETE` | `/admin/users`     | Bearer + Admin | Delete all users       |
 
 ### Sessions (`/sessions`)
 
@@ -168,11 +169,11 @@ The API will be available at `http://localhost:3000`.
 
 ### MFA – OTP (`/mfa/otp`)
 
-| Method | Path                     | Auth | Description        |
-| ------ | ------------------------ | ---- | ------------------ |
-| `POST` | `/mfa/otp/request-email` | —    | Send OTP via email |
-| `POST` | `/mfa/otp/request-sms`   | —    | Send OTP via SMS   |
-| `POST` | `/mfa/otp/verify`        | —    | Verify OTP code    |
+| Method | Path                     | Auth   | Description        |
+| ------ | ------------------------ | ------ | ------------------ |
+| `POST` | `/mfa/otp/request-email` | Bearer | Send OTP via email |
+| `POST` | `/mfa/otp/request-sms`   | Bearer | Send OTP via SMS   |
+| `POST` | `/mfa/otp/verify`        | Bearer | Verify OTP code    |
 
 ### MFA – TOTP (`/mfa/totp`)
 
@@ -185,26 +186,26 @@ The API will be available at `http://localhost:3000`.
 
 ### RBAC – Roles (`/roles`)
 
-| Method   | Path             | Auth   | Description           |
-| -------- | ---------------- | ------ | --------------------- |
-| `POST`   | `/roles/add`     | Bearer | Create a role         |
-| `POST`   | `/roles/assign`  | Bearer | Assign role to user   |
-| `DELETE` | `/roles/remove`  | Bearer | Remove role from user |
-| `DELETE` | `/roles/delete`  | Bearer | Delete a role         |
-| `GET`    | `/roles/:userId` | Bearer | Get user roles        |
-| `GET`    | `/roles`         | Bearer | List all roles        |
+| Method   | Path             | Auth           | Description           |
+| -------- | ---------------- | -------------- | --------------------- |
+| `POST`   | `/roles/add`     | Bearer + Admin | Create a role         |
+| `POST`   | `/roles/assign`  | Bearer + Admin | Assign role to user   |
+| `DELETE` | `/roles/remove`  | Bearer + Admin | Remove role from user |
+| `DELETE` | `/roles/delete`  | Bearer + Admin | Delete a role         |
+| `GET`    | `/roles/:userId` | Bearer + Admin | Get user roles        |
+| `GET`    | `/roles`         | Bearer + Admin | List all roles        |
 
 ### RBAC – Permissions (`/permissions`)
 
-| Method   | Path                   | Auth   | Description                 |
-| -------- | ---------------------- | ------ | --------------------------- |
-| `POST`   | `/permissions/add`     | Bearer | Create a permission         |
-| `POST`   | `/permissions/grant`   | Bearer | Grant permission to role    |
-| `POST`   | `/permissions/revoke`  | Bearer | Revoke permission from role |
-| `GET`    | `/permissions/check`   | Bearer | Check user permission       |
-| `GET`    | `/permissions`         | Bearer | List all permissions        |
-| `GET`    | `/permissions/:userId` | Bearer | Get user permissions        |
-| `DELETE` | `/permissions/delete`  | Bearer | Delete a permission         |
+| Method   | Path                   | Auth           | Description                 |
+| -------- | ---------------------- | -------------- | --------------------------- |
+| `POST`   | `/permissions/add`     | Bearer + Admin | Create a permission         |
+| `POST`   | `/permissions/grant`   | Bearer + Admin | Grant permission to role    |
+| `POST`   | `/permissions/revoke`  | Bearer + Admin | Revoke permission from role |
+| `GET`    | `/permissions/check`   | Bearer + Admin | Check user permission       |
+| `GET`    | `/permissions`         | Bearer + Admin | List all permissions        |
+| `GET`    | `/permissions/:userId` | Bearer + Admin | Get user permissions        |
+| `DELETE` | `/permissions/delete`  | Bearer + Admin | Delete a permission         |
 
 ### CAPTCHA (`/captcha`)
 
@@ -244,6 +245,10 @@ The codebase follows a **functional architecture** — no classes. All modules e
 - **Centralized error handling**: Errors thrown anywhere in the request pipeline are caught by a single `errorHandler` middleware.
 - **Custom exceptions**: Each exception type is a factory function returning a typed `AppException` with a name, message, status code, and optional error code.
 - **Immutable domain objects**: `createEntity()` and `createUser()` return frozen objects.
+- **Role-based authorization**: A `requireRole("admin")` middleware guards admin, RBAC, and permission routes.
+- **MFA-aware login**: When TOTP is enabled for a user, `POST /auth/login` returns a temporary `mfaToken` instead of session tokens. The client must call `POST /auth/mfa-verify` to complete authentication.
+- **Session validation**: The auth middleware verifies that the JWT's session still exists and has not been revoked.
+- **Security headers**: Helmet and CORS are applied globally.
 
 ---
 
@@ -265,15 +270,18 @@ Tests live in `apps/api/tests/` and are organized by layer:
 ```
 tests/
 ├── setup/           # Jest setup (environment config)
-└── unit/
-    ├── controllers/ # Controller handler tests
-    ├── core/        # DI container tests
-    ├── domain/      # Domain factory tests
-    ├── exceptions/  # Exception factory tests
-    ├── middleware/  # Error handler & validation tests
-    ├── services/    # Service logic tests (mocked repos)
-    ├── utils/       # Utility function tests
-    └── validation/  # Zod schema tests
+├── helpers/         # Shared test utilities (mock helpers, token factory)
+├── unit/
+│   ├── controllers/ # Controller handler tests
+│   ├── core/        # DI container tests
+│   ├── domain/      # Domain factory tests
+│   ├── exceptions/  # Exception factory tests
+│   ├── middleware/   # Error handler & validation tests
+│   ├── services/    # Service logic tests (mocked repos)
+│   ├── utils/       # Utility function tests
+│   └── validation/  # Zod schema tests
+├── integration/     # Route-level tests (mocked services, real middleware)
+└── e2e/             # Multi-step flow tests (auth lifecycle, RBAC, etc.)
 ```
 
 ---

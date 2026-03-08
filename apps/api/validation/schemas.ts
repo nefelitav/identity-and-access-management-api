@@ -53,8 +53,11 @@ export const refreshTokenSchema = z.object({
   }),
 });
 
-export const logoutSchema = z.object({
-  body: z.object({}), // Empty body for logout
+export const updateProfileSchema = z.object({
+  body: z.object({
+    email: emailSchema.optional(),
+    password: passwordSchema.optional(),
+  }),
 });
 
 export const getUserSchema = z.object({

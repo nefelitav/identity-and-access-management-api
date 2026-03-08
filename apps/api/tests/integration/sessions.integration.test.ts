@@ -79,10 +79,7 @@ describe("DELETE /sessions/:sessionId", () => {
   it("should return 200 on successful delete", async () => {
     mockSessionService.deleteSession.mockResolvedValue(undefined);
 
-    const res = await request(app)
-      .delete("/sessions/s1")
-      .set(auth)
-      .send({ params: { sessionId: "s1" } });
+    const res = await request(app).delete("/sessions/s1").set(auth);
 
     expect(res.status).toBe(200);
   });

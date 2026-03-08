@@ -4,13 +4,13 @@ import {
   loginHandler,
   logoutHandler,
   refreshTokenHandler,
+  verifyMfaLoginHandler,
 } from "~/controllers/auth/authController";
-import { validateRequest } from "~/middleware";
+import { validateRequest, authMiddleware } from "~/middleware";
 import {
   registerSchema,
   loginSchema,
   refreshTokenSchema,
-  logoutSchema,
 } from "~/validation/schemas";
 import {
   loginLimiter,
@@ -42,11 +42,9 @@ authRouter.post(
   refreshTokenHandler,
 );
 
-authRouter.post(
-  "/logout",
-  validateRequest(logoutSchema),
-  logoutLimiter,
-  logoutHandler,
-);
+authRouter.post("/logout", authMiddleware, logoutLimiter, logoutHandler);
+
+/** Complete login when MFA is required (no auth — uses short-lived mfaToken). */
+authRouter.post("/mfa-verify", loginLimiter, verifyMfaLoginHandler);
 
 export { authRouter };

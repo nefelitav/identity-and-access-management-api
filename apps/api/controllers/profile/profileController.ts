@@ -1,8 +1,4 @@
-import {
-  handleRequest,
-  extractUserAgent,
-  extractIpAddress,
-} from "~/controllers/base/baseController";
+import { handleRequest } from "~/controllers/base/baseController";
 import * as profileService from "~/services/profile/profileService";
 import { createLogger } from "~/utils";
 
@@ -12,18 +8,14 @@ const logger = createLogger("ProfileController");
 export const updateProfileHandler = handleRequest(async (req) => {
   const { email, password } = req.body;
   const userId = req.user?.userId;
-  const userAgent = extractUserAgent(req);
-  const ip = extractIpAddress(req);
 
   const updatedUser = await profileService.updateProfile({
     userId,
     email,
     password,
-    userAgent,
-    ip,
   });
 
-  logger.info(`User profile updated successfully: ${email}`);
+  logger.info(`User profile updated for user: ${userId}`);
   return updatedUser;
 });
 
@@ -50,7 +42,7 @@ export const resetPasswordHandler = handleRequest(async (req) => {
   const { resetToken, newPassword } = req.body;
   await profileService.resetPassword(resetToken, newPassword);
 
-  logger.info(`Password reset completed using token: ${resetToken}`);
+  logger.info(`Password reset completed`);
   return { message: "Password reset successfully" };
 });
 

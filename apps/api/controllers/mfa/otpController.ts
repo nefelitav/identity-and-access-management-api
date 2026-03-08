@@ -7,25 +7,28 @@ const logger = createLogger("OtpController");
 
 /** Send a one-time password to the user's email. */
 export const requestCodeInEmailHandler = handleRequest(async (req) => {
-  const { userId, email } = req.body;
+  const userId = req.user!.userId;
+  const { email } = req.body;
   await otpService.generateAndSendCodeViaEmail(userId, email);
 
-  logger.info(`OTP email code sent to ${email} for user: ${userId}`);
+  logger.info(`OTP email code sent for user: ${userId}`);
   return { message: "Verification code sent" };
 });
 
 /** Send a one-time password via SMS. */
 export const requestCodeInSmsHandler = handleRequest(async (req) => {
-  const { userId, phone } = req.body;
+  const userId = req.user!.userId;
+  const { phone } = req.body;
   await otpService.generateAndSendCodeViaSms(userId, phone);
 
-  logger.info(`OTP SMS code sent to ${phone} for user: ${userId}`);
+  logger.info(`OTP SMS code sent for user: ${userId}`);
   return { message: "Verification code sent" };
 });
 
 /** Verify a submitted OTP code. */
 export const verifyCodeHandler = handleRequest(async (req) => {
-  const { userId, code } = req.body;
+  const userId = req.user!.userId;
+  const { code } = req.body;
   const isValid = await otpService.verifyCode(userId, code);
 
   if (!isValid) {

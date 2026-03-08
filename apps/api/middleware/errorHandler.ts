@@ -17,6 +17,8 @@ const ERROR_CODE_MAP: Record<string, string> = {
   InvalidCredentialsException: "AUTH_INVALID_CREDENTIALS",
   AccountLockedException: "AUTH_ACCOUNT_LOCKED",
   InvalidRefreshTokenException: "AUTH_INVALID_REFRESH_TOKEN",
+  ForbiddenException: "AUTH_FORBIDDEN",
+  MfaChallengeRequiredException: "AUTH_MFA_REQUIRED",
   UserNotFoundException: "USER_NOT_FOUND",
   CaptchaVerificationFailedException: "CAPTCHA_FAILED",
   InvalidOtpTokenException: "MFA_INVALID_OTP",
