@@ -14,7 +14,8 @@ metadata:
 data:
   NODE_ENV: "production"
   PORT: "3000"
-  JWT_EXPIRY: "15m"
+  JWT_EXPIRY: "900"
+  CORS_ORIGIN: "https://api.identityforge.com"
   RATE_LIMIT_WINDOW_MS: "900000"
   RATE_LIMIT_MAX_REQUESTS: "100"
 ---
@@ -25,8 +26,8 @@ metadata:
   namespace: identity-forge
 type: Opaque
 stringData:
-  DATABASE_URL: "postgresql://postgres:password@postgres-service:5432/identity_forge"
-  REDIS_URL: "redis://redis-service:6379"
+  DATABASE_URL: "postgresql://postgres:password@postgres-service.identity-forge-db.svc.cluster.local:5432/identity_forge"
+  REDIS_URL: "redis://:redis_password@redis-service.identity-forge-cache.svc.cluster.local:6379"
   JWT_SECRET: "your-super-secret-jwt-key-at-least-32-characters-long"
   SESSION_SECRET: "your-super-secret-session-key-at-least-32-characters-long"
   SMTP_HOST: "smtp.gmail.com"
@@ -73,6 +74,16 @@ spec:
                 configMapKeyRef:
                   name: identity-forge-config
                   key: PORT
+            - name: JWT_EXPIRY
+              valueFrom:
+                configMapKeyRef:
+                  name: identity-forge-config
+                  key: JWT_EXPIRY
+            - name: CORS_ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  name: identity-forge-config
+                  key: CORS_ORIGIN
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -160,7 +171,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /readyz
+              path: /ready
               port: 3000
             initialDelaySeconds: 5
             periodSeconds: 5

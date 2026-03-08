@@ -225,7 +225,7 @@ apps/api/
 ├── domain/          # Domain types (User, Entity)
 ├── dtos/            # Request / response type definitions
 ├── exceptions/      # Custom application errors with status codes
-├── middleware/       # Auth, validation, error handling
+├── middleware/      # Auth, validation, error handling
 ├── repositories/    # Data-access layer (Prisma)
 ├── routes/          # Express route definitions
 ├── services/        # Business logic
