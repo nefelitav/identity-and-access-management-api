@@ -8,7 +8,6 @@ import {
   authRouter,
   sessionRouter,
   profileRouter,
-  captchaRouter,
   totpRouter,
   otpRouter,
   permissionRouter,
@@ -28,7 +27,7 @@ app.use(
   }),
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 
 app.use((req, _res, next) => {
   const id = (req.headers["x-request-id"] as string) ?? crypto.randomUUID();
@@ -40,7 +39,6 @@ app.use("/admin", adminRouter);
 app.use("/auth", authRouter);
 app.use("/profile", profileRouter);
 app.use("/sessions", sessionRouter);
-app.use("/captcha", captchaRouter);
 app.use("/mfa/totp", totpRouter);
 app.use("/mfa/otp", otpRouter);
 app.use("/permissions", permissionRouter);

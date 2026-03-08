@@ -4,15 +4,15 @@
 
 ## Features
 
-| Category               | Capabilities                                                           |
-| ---------------------- | ---------------------------------------------------------------------- |
-| **Authentication**     | Register, login, logout, JWT access & refresh tokens, session tracking |
-| **Multi-Factor Auth**  | TOTP (authenticator apps), OTP via email & SMS                         |
-| **Authorization**      | Role-based access control (RBAC) with granular permissions             |
-| **Session Management** | Multi-device sessions, revocation, activity tracking                   |
-| **Profile**            | Self-service profile updates, password reset via email                 |
-| **Security**           | Account lockout, rate limiting, CAPTCHA, Helmet, CORS                  |
-| **Observability**      | Structured logging, health & readiness endpoints                       |
+| Category               | Capabilities                                                                       |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| **Authentication**     | Register, login, logout, JWT access & refresh tokens, email verification           |
+| **Multi-Factor Auth**  | TOTP (authenticator apps), OTP via email & SMS                                     |
+| **Authorization**      | Role-based access control (RBAC) with granular permissions                         |
+| **Session Management** | Multi-device sessions, revocation, activity tracking                               |
+| **Profile**            | Self-service profile updates, password reset via email                             |
+| **Security**           | Account lockout, rate limiting, CAPTCHA middleware, body size limits, Helmet, CORS |
+| **Observability**      | Structured logging, health & readiness endpoints                                   |
 
 ---
 
@@ -29,8 +29,8 @@
 - **MFA:** Speakeasy (TOTP), custom OTP with Redis TTL
 - **Email:** Nodemailer
 - **SMS:** Twilio
-- **CAPTCHA:** Google reCAPTCHA v3
-- **Docs:** Swagger / OpenAPI 3.0 (auto-generated), TypeDoc
+- **CAPTCHA:** Google reCAPTCHA v3 (middleware on login & register)
+- **Docs:** TypeDoc
 - **Testing:** Jest, ts-jest, Supertest
 - **CI/CD:** GitHub Actions
 - **Deployment:** Docker, Docker Compose, Kubernetes
@@ -102,6 +102,7 @@ RECAPTCHA_SITE_KEY=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
 
 # Security
 CORS_ORIGIN=http://localhost:3000,http://localhost:3001
+FRONTEND_URL=http://localhost:3000
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=1000
 SESSION_SECRET=your-session-secret-key-at-least-32-characters-long
@@ -131,13 +132,15 @@ The API will be available at `http://localhost:3000`.
 
 ### Authentication (`/auth`)
 
-| Method | Path                  | Auth   | Description                         |
-| ------ | --------------------- | ------ | ----------------------------------- |
-| `POST` | `/auth/register`      | —      | Create a new account                |
-| `POST` | `/auth/login`         | —      | Authenticate & receive tokens       |
-| `POST` | `/auth/logout`        | Bearer | Invalidate current session          |
-| `POST` | `/auth/refresh-token` | —      | Refresh an access token             |
-| `POST` | `/auth/mfa-verify`    | —      | Complete login when MFA is required |
+| Method | Path                        | Auth   | Description                         |
+| ------ | --------------------------- | ------ | ----------------------------------- |
+| `POST` | `/auth/register`            | —      | Create a new account                |
+| `POST` | `/auth/login`               | —      | Authenticate & receive tokens       |
+| `POST` | `/auth/logout`              | Bearer | Invalidate current session          |
+| `POST` | `/auth/refresh-token`       | —      | Refresh an access token             |
+| `POST` | `/auth/mfa-verify`          | —      | Complete login when MFA is required |
+| `POST` | `/auth/verify-email`        | —      | Verify email with token             |
+| `POST` | `/auth/resend-verification` | Bearer | Resend verification email           |
 
 ### Profile (`/profile`)
 
@@ -207,25 +210,18 @@ The API will be available at `http://localhost:3000`.
 | `GET`    | `/permissions/:userId` | Bearer + Admin | Get user permissions        |
 | `DELETE` | `/permissions/delete`  | Bearer + Admin | Delete a permission         |
 
-### CAPTCHA (`/captcha`)
-
-| Method | Path              | Auth | Description            |
-| ------ | ----------------- | ---- | ---------------------- |
-| `POST` | `/captcha/verify` | —    | Verify reCAPTCHA token |
-
 ---
 
 ## Architecture
 
 ```
 apps/api/
-├── config/          # Environment config (envalid) & Swagger setup
+├── config/          # Environment config (envalid)
 ├── controllers/     # Route handlers – thin, delegate to services
 ├── core/            # DI container & service registration
 ├── domain/          # Domain types (User, Entity)
-├── dtos/            # Request / response type definitions
 ├── exceptions/      # Custom application errors with status codes
-├── middleware/      # Auth, validation, error handling
+├── middleware/      # Auth, CAPTCHA, validation, error handling
 ├── repositories/    # Data-access layer (Prisma)
 ├── routes/          # Express route definitions
 ├── services/        # Business logic
@@ -246,9 +242,11 @@ The codebase follows a **functional architecture** — no classes. All modules e
 - **Custom exceptions**: Each exception type is a factory function returning a typed `AppException` with a name, message, status code, and optional error code.
 - **Immutable domain objects**: `createEntity()` and `createUser()` return frozen objects.
 - **Role-based authorization**: A `requireRole("admin")` middleware guards admin, RBAC, and permission routes.
+- **Email verification**: Registration sends a verification email with a secure token. Users can resend via `POST /auth/resend-verification`.
+- **CAPTCHA middleware**: `requireCaptcha()` is applied to login & register routes. When `RECAPTCHA_SECRET_KEY` is not set, it is automatically skipped.
 - **MFA-aware login**: When TOTP is enabled for a user, `POST /auth/login` returns a temporary `mfaToken` instead of session tokens. The client must call `POST /auth/mfa-verify` to complete authentication.
 - **Session validation**: The auth middleware verifies that the JWT's session still exists and has not been revoked.
-- **Security headers**: Helmet and CORS are applied globally.
+- **Security headers**: Helmet, CORS, and request body size limits are applied globally.
 
 ---
 

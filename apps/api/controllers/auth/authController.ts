@@ -68,3 +68,18 @@ export const verifyMfaLoginHandler = handleRequest(async (req) => {
   logger.info("MFA login verified successfully");
   return tokens;
 });
+
+export const verifyEmailHandler = handleRequest(async (req) => {
+  const { token } = req.body;
+  const result = await authService.verifyEmail(token);
+  logger.info("Email verified successfully");
+  return result;
+});
+
+export const resendVerificationHandler = handleRequest(async (req) => {
+  const userId = req.user?.userId;
+  if (!userId) throw new Error("Unauthorized");
+  const result = await authService.resendVerificationEmail(userId);
+  logger.info(`Resend verification email for user: ${userId}`);
+  return result;
+});

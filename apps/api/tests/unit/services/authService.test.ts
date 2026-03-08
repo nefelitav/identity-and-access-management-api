@@ -62,6 +62,23 @@ jest.mock("~/services/session/sessionService", () => ({
   },
 }));
 
+jest.mock("~/config", () => ({
+  config: {
+    FRONTEND_URL: "http://localhost:3000",
+    JWT_SECRET: "test-secret-key-that-is-long-enough",
+    JWT_EXPIRY: 900,
+  },
+}));
+
+jest.mock("~/utils/redis", () => ({
+  __esModule: true,
+  default: {
+    setEx: jest.fn().mockResolvedValue("OK"),
+    get: jest.fn().mockResolvedValue(null),
+    del: jest.fn().mockResolvedValue(1),
+  },
+}));
+
 import { container, SERVICE_IDENTIFIERS } from "~/core";
 import * as authService from "~/services/auth/authService";
 
@@ -116,6 +133,7 @@ describe("authService.register", () => {
     expect(result).toHaveProperty("accessToken");
     expect(result).toHaveProperty("refreshToken");
     expect(result.email).toBe("new@test.com");
+    expect(result.emailVerified).toBe(false);
   });
 });
 

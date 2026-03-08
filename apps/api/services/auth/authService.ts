@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { container, SERVICE_IDENTIFIERS } from "~/core";
 import { UserRepository, TotpRepository } from "~/repositories";
 import {
@@ -17,6 +18,8 @@ import {
   SALT,
   sendEmail,
 } from "~/utils";
+import { config } from "~/config";
+import redisClient from "~/utils/redis";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MINUTES = 15;
@@ -54,13 +57,70 @@ export async function register({
 
     const tokens = await generateTokens(user.id, userAgent, ip);
 
+    try {
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+      await redisClient.setEx(
+        `emailVerify:${verificationToken}`,
+        86400,
+        user.id,
+      );
+
+      const verifyUrl = `${config.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+      await sendEmail({
+        to: email,
+        subject: "Verify your email",
+        text: `Welcome! Please verify your email by clicking: ${verifyUrl}`,
+        html: `<p>Welcome!</p><p>Please verify your email by clicking: <a href="${verifyUrl}">Verify Email</a></p>`,
+      });
+    } catch {
+      // Verification email is best-effort; user can request a resend later
+    }
+
     return {
       id: user.id,
       email: user.email,
+      emailVerified: false,
       createdAt: user.createdAt.toISOString(),
       ...tokens,
     };
   });
+}
+
+export async function verifyEmail(token: string) {
+  const userId = await redisClient.get(`emailVerify:${token}`);
+  if (!userId) throw InvalidCredentialsException();
+
+  const userRepository = getUserRepository();
+  const user = await userRepository.findById(userId);
+  if (!user) throw UserNotFoundException();
+
+  await userRepository.update(userId, { emailVerified: true });
+  await redisClient.del(`emailVerify:${token}`);
+
+  return { message: "Email verified successfully" };
+}
+
+export async function resendVerificationEmail(userId: string) {
+  const userRepository = getUserRepository();
+  const user = await userRepository.findById(userId);
+  if (!user) throw UserNotFoundException();
+
+  if (user.emailVerified) {
+    return { message: "Email already verified" };
+  }
+
+  const verificationToken = crypto.randomBytes(32).toString("hex");
+  await redisClient.setEx(`emailVerify:${verificationToken}`, 86400, user.id);
+
+  const verifyUrl = `${config.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+  await sendEmail({
+    to: user.email,
+    subject: "Verify your email",
+    text: `Please verify your email by clicking: ${verifyUrl}`,
+    html: `<p>Please verify your email by clicking: <a href="${verifyUrl}">Verify Email</a></p>`,
+  });
+
+  return { message: "Verification email sent" };
 }
 
 export async function login({
@@ -146,8 +206,6 @@ export async function login({
     const mfaSecret = await totpRepo.getSecretByUserId(user.id);
 
     if (mfaSecret?.enabled) {
-      if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined");
-
       const mfaToken = jwt.sign(
         {
           userId: user.id,
@@ -201,10 +259,6 @@ export async function refreshToken(refreshTokenValue: string) {
 
   await sessionService.updateLastActive(session.id);
 
-  if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined");
-  }
-
   const newAccessToken = jwt.sign(
     {
       userId: session.userId,
@@ -235,8 +289,6 @@ export async function verifyMfaLogin({
   userAgent?: string;
   ip?: string;
 }) {
-  if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined");
-
   let payload: any;
   try {
     payload = jwt.verify(mfaToken, JWT_SECRET, {

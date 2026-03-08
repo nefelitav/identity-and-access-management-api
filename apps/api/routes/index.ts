@@ -1,7 +1,6 @@
 export { adminRouter } from "./admin";
 export { profileRouter } from "./profile";
 export { sessionRouter } from "./session";
-export { captchaRouter } from "./captcha";
 export { otpRouter } from "./mfa";
 export { totpRouter } from "./mfa";
 export { authRouter } from "./auth";

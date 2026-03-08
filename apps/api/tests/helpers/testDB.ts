@@ -4,6 +4,7 @@ import { execSync } from "child_process";
 import path from "path";
 import { container, SERVICE_IDENTIFIERS } from "~/core";
 import { initializeServices } from "~/core/serviceFactory";
+import redisUtil from "~/utils/redis";
 
 function schemaPath(): string {
   return path.resolve(
@@ -77,6 +78,9 @@ export async function teardownTestDB() {
   } catch {}
   try {
     await redis?.quit();
+  } catch {}
+  try {
+    await redisUtil.quit();
   } catch {}
 }
 
