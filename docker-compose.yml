@@ -33,7 +33,7 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes --requirepass redis_password
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "redis_password", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -63,11 +63,14 @@ services:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/identity_forge
       REDIS_URL: redis://:redis_password@redis:6379
       JWT_SECRET: your-super-secret-jwt-key-at-least-32-characters-long
+      JWT_EXPIRY: "900"
       SESSION_SECRET: your-super-secret-session-key-at-least-32-characters-long
+      CORS_ORIGIN: http://localhost:3000,http://localhost:3001
       SMTP_HOST: mailhog
-      SMTP_PORT: 1025
+      SMTP_PORT: "1025"
       SMTP_USER: user
       SMTP_PASS: password
+      SMTP_FROM: noreply@localhost
     ports:
       - "3000:3000"
     depends_on:
