@@ -16,6 +16,13 @@ jest.mock("~/utils/rateLimiting", () => {
   };
 });
 
+jest.mock("~/utils/createLogger", () => () => ({
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+}));
+
 jest.mock("~/services/profile/profileService");
 
 import request from "supertest";

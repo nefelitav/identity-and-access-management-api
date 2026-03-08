@@ -83,9 +83,10 @@ describe("GET /roles", () => {
   });
 
   it("should return 200 with all roles", async () => {
-    mockRbacService.getAllRoles.mockResolvedValue([
-      { id: "r1", name: "admin" },
-    ] as any);
+    mockRbacService.getAllRoles.mockResolvedValue({
+      data: [{ id: "r1", name: "admin" }],
+      pagination: { page: 1, limit: 10, total: 1 },
+    } as any);
 
     const res = await request(app).get("/roles").set(auth);
 

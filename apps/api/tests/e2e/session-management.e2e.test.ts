@@ -50,7 +50,10 @@ const mockSessionService = {
 
 (createSessionService as jest.Mock).mockReturnValue(mockSessionService);
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  (createSessionService as jest.Mock).mockReturnValue(mockSessionService);
+});
 
 describe("Session management E2E", () => {
   const userId = "session-user-id";

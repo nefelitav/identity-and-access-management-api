@@ -78,18 +78,20 @@ describe("RBAC flow E2E", () => {
       .send({ name: "editor" });
 
     expect(createRoleRes.status).toBe(200);
-    expect(createRoleRes.body.data.name).toBe("editor");
+    expect(createRoleRes.body.data.role.name).toBe("editor");
 
     // ── Step 3: List All Roles ──────────────────────────
-    mockRbac.getAllRoles.mockResolvedValue([
-      { id: "role-1", name: "editor" },
-      { id: "role-2", name: "admin" },
-    ] as any);
+    mockRbac.getAllRoles.mockResolvedValue({
+      data: [
+        { id: "role-1", name: "editor" },
+        { id: "role-2", name: "admin" },
+      ],
+    } as any);
 
     const listRolesRes = await request(app).get("/roles").set(auth);
 
     expect(listRolesRes.status).toBe(200);
-    expect(listRolesRes.body.data).toHaveLength(2);
+    expect(listRolesRes.body.data.roles.data).toHaveLength(2);
 
     // ── Step 4: Assign Role to User ─────────────────────
     mockRbac.assignRoleToUser.mockResolvedValue(undefined as any);
@@ -97,21 +99,19 @@ describe("RBAC flow E2E", () => {
     const assignRes = await request(app)
       .post("/roles/assign")
       .set(auth)
-      .send({ userId: targetUserId, roleName: "editor" });
+      .send({ userId: targetUserId, role: "editor" });
 
     expect(assignRes.status).toBe(200);
 
     // ── Step 5: Get User Roles ──────────────────────────
-    mockRbac.getUserRoles.mockResolvedValue([
-      { id: "role-1", name: "editor" },
-    ] as any);
+    mockRbac.getUserRoles.mockResolvedValue(["editor"] as any);
 
     const userRolesRes = await request(app)
       .get(`/roles/${targetUserId}`)
       .set(auth);
 
     expect(userRolesRes.status).toBe(200);
-    expect(userRolesRes.body.data).toHaveLength(1);
+    expect(userRolesRes.body.data.roles).toHaveLength(1);
 
     // ── Step 6: Add Permission ──────────────────────────
     mockPerm.addPermission.mockResolvedValue({
@@ -125,7 +125,7 @@ describe("RBAC flow E2E", () => {
       .send({ name: "write:articles" });
 
     expect(addPermRes.status).toBe(200);
-    expect(addPermRes.body.data.name).toBe("write:articles");
+    expect(addPermRes.body.data.message).toBe("Permission added");
 
     // ── Step 7: Grant Permission to Role ────────────────
     mockPerm.grantPermission.mockResolvedValue(undefined as any);
@@ -165,7 +165,7 @@ describe("RBAC flow E2E", () => {
     const removeRoleRes = await request(app)
       .delete("/roles/remove")
       .set(auth)
-      .send({ userId: targetUserId, roleName: "editor" });
+      .send({ userId: targetUserId, role: "editor" });
 
     expect(removeRoleRes.status).toBe(200);
 

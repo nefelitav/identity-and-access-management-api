@@ -41,7 +41,10 @@ const mockSessionService = {
 const token = createValidToken("u1", "s1");
 const auth = { Authorization: `Bearer ${token}` };
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  (createSessionService as jest.Mock).mockReturnValue(mockSessionService);
+});
 
 describe("GET /sessions", () => {
   it("should return 401 without auth", async () => {
