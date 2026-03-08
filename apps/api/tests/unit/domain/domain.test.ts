@@ -33,6 +33,7 @@ describe("createUser", () => {
     id: "user-1",
     email: "test@example.com",
     password: "hashed",
+    emailVerified: false,
     failedLoginAttempts: 0,
     createdAt: new Date("2024-01-01"),
     updatedAt: new Date("2024-06-01"),

@@ -66,6 +66,7 @@ services:
       JWT_EXPIRY: "900"
       SESSION_SECRET: your-super-secret-session-key-at-least-32-characters-long
       CORS_ORIGIN: http://localhost:3000,http://localhost:3001
+      FRONTEND_URL: http://localhost:3000
       SMTP_HOST: mailhog
       SMTP_PORT: "1025"
       SMTP_USER: user

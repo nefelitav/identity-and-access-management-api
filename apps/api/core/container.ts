@@ -63,16 +63,6 @@ export const SERVICE_IDENTIFIERS = {
   PermissionRepository: createServiceIdentifier("PermissionRepository"),
   TotpRepository: createServiceIdentifier("TotpRepository"),
 
-  AuthService: createServiceIdentifier("AuthService"),
-  SessionService: createServiceIdentifier("SessionService"),
-  RbacService: createServiceIdentifier("RbacService"),
-  PermissionService: createServiceIdentifier("PermissionService"),
-  TotpService: createServiceIdentifier("TotpService"),
-  OtpService: createServiceIdentifier("OtpService"),
-  AdminService: createServiceIdentifier("AdminService"),
-  ProfileService: createServiceIdentifier("ProfileService"),
-  CaptchaService: createServiceIdentifier("CaptchaService"),
-
   DatabaseClient: createServiceIdentifier("DatabaseClient"),
   RedisClient: createServiceIdentifier("RedisClient"),
   Logger: createServiceIdentifier("Logger"),

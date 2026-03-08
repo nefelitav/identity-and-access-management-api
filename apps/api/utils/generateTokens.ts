@@ -14,10 +14,6 @@ export async function generateTokens(
 ) {
   const refreshToken = uuidv4();
 
-  if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined");
-  }
-
   const expiresIn = remember
     ? 30 * 24 * 60 * 60 // 30 days
     : 7 * 24 * 60 * 60; // 7 days

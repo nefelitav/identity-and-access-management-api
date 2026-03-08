@@ -5,8 +5,10 @@ import {
   logoutHandler,
   refreshTokenHandler,
   verifyMfaLoginHandler,
+  verifyEmailHandler,
+  resendVerificationHandler,
 } from "~/controllers/auth/authController";
-import { validateRequest, authMiddleware } from "~/middleware";
+import { validateRequest, authMiddleware, requireCaptcha } from "~/middleware";
 import {
   registerSchema,
   loginSchema,
@@ -25,6 +27,7 @@ authRouter.post(
   "/register",
   validateRequest(registerSchema),
   registerLimiter,
+  requireCaptcha(),
   registerHandler,
 );
 
@@ -32,6 +35,7 @@ authRouter.post(
   "/login",
   validateRequest(loginSchema),
   loginLimiter,
+  requireCaptcha(),
   loginHandler,
 );
 
@@ -45,5 +49,14 @@ authRouter.post(
 authRouter.post("/logout", authMiddleware, logoutLimiter, logoutHandler);
 
 authRouter.post("/mfa-verify", loginLimiter, verifyMfaLoginHandler);
+
+authRouter.post("/verify-email", verifyEmailHandler);
+
+authRouter.post(
+  "/resend-verification",
+  authMiddleware,
+  registerLimiter,
+  resendVerificationHandler,
+);
 
 export { authRouter };

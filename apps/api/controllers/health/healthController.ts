@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
-import redisClient from "~/utils/redis";
 import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { container, SERVICE_IDENTIFIERS } from "~/core";
+import redisClient from "~/utils/redis";
 
 export async function healthCheck(_req: Request, res: Response) {
   res.status(200).json({
@@ -24,6 +23,9 @@ export async function readinessCheck(_req: Request, res: Response) {
   };
 
   try {
+    const prisma = container.get<PrismaClient>(
+      SERVICE_IDENTIFIERS.DatabaseClient,
+    );
     await prisma.$queryRaw`SELECT 1`;
     checks.database = true;
   } catch (error) {

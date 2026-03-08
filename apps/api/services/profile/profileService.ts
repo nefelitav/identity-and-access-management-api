@@ -1,10 +1,11 @@
 import bcrypt from "bcryptjs";
-import { v4 as uuidv4 } from "uuid";
+import crypto from "crypto";
 import { container, SERVICE_IDENTIFIERS } from "~/core";
 import { UserRepository } from "~/repositories";
 import { UserNotFoundException } from "~/exceptions";
 import { createSessionService } from "~/services/session/sessionService";
 import { SALT, sendEmail } from "~/utils";
+import { config } from "~/config";
 import redisClient from "~/utils/redis";
 
 function getUserRepository() {
@@ -65,7 +66,7 @@ export async function requestPasswordReset(email: string) {
   if (!user) throw UserNotFoundException();
 
   const token = await generateResetToken(user.id);
-  const resetUrl = `https://yourfrontend.com/reset-password?token=${token}`;
+  const resetUrl = `${config.FRONTEND_URL}/reset-password?token=${token}`;
 
   await sendEmail({
     to: email,
@@ -95,11 +96,9 @@ export async function getUser(userId?: string) {
   return user;
 }
 
-// ── Internal helpers ──────────────────────────────────────────────
-
 async function generateResetToken(userId: string) {
-  const token = uuidv4();
-  await redisClient.setEx(`passwordReset:${token}`, 3600, userId); // 1-hour TTL
+  const token = crypto.randomBytes(32).toString("hex");
+  await redisClient.setEx(`passwordReset:${token}`, 3600, userId);
   return token;
 }
 

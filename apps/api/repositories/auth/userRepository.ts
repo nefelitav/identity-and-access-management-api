@@ -5,6 +5,10 @@ import {
   type BaseRepository,
 } from "~/repositories/base/BaseRepository";
 
+export type UserRecord = Prisma.UserGetPayload<{}> & {
+  emailVerified: boolean;
+};
+
 interface UserCreateInput {
   email: string;
   password: string;
@@ -13,6 +17,7 @@ interface UserCreateInput {
 interface UserUpdateInput {
   email?: string;
   password?: string;
+  emailVerified?: boolean;
   failedLoginAttempts?: number;
   lockoutUntil?: Date | null;
 }
@@ -24,19 +29,15 @@ interface UserFilters extends FilterOptions {
 }
 
 export interface UserRepository
-  extends BaseRepository<
-    Prisma.UserGetPayload<{}>,
-    UserCreateInput,
-    UserUpdateInput
-  > {
+  extends BaseRepository<UserRecord, UserCreateInput, UserUpdateInput> {
   findByEmail(email: string): Promise<any>;
   existsByEmail(email: string): Promise<boolean>;
   updateFailedAttempts(
     id: string,
     attempts: number,
     lockoutUntil?: Date | null,
-  ): Promise<Prisma.UserGetPayload<{}>>;
-  resetFailedAttempts(id: string): Promise<Prisma.UserGetPayload<{}>>;
+  ): Promise<UserRecord>;
+  resetFailedAttempts(id: string): Promise<UserRecord>;
 }
 
 function buildWhereClause(filters: UserFilters): Prisma.UserWhereInput {

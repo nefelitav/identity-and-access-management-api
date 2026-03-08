@@ -36,6 +36,7 @@ export const config = cleanEnv(process.env, {
   RECAPTCHA_SITE_KEY: str({ default: "" }),
 
   CORS_ORIGIN: str({ default: "http://localhost:3000" }),
+  FRONTEND_URL: str({ default: "http://localhost:3000" }),
   RATE_LIMIT_WINDOW_MS: num({ default: 15 * 60 * 1000 }),
   RATE_LIMIT_MAX_REQUESTS: num({ default: 100 }),
 

@@ -12,6 +12,7 @@ if (!process.env.REDIS_URL) {
   process.env.REDIS_URL = "redis://localhost:6380";
 }
 process.env.PORT = process.env.PORT || "3000";
+process.env.FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 process.env.SMTP_HOST = "";
 delete process.env.TWILIO_ACCOUNT_SID;

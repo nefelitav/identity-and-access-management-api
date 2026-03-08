@@ -36,7 +36,11 @@ jest.mock("bcryptjs", () => ({
   hash: jest.fn().mockResolvedValue("hashed-pw"),
 }));
 
-jest.mock("uuid", () => ({ v4: () => "mock-uuid" }));
+jest.mock("~/config", () => ({
+  config: {
+    FRONTEND_URL: "http://localhost:3000",
+  },
+}));
 
 import { container } from "~/core";
 import * as profileService from "~/services/profile/profileService";
@@ -146,7 +150,7 @@ describe("profileService.requestPasswordReset", () => {
     await profileService.requestPasswordReset("user@test.com");
 
     expect(redis.setEx).toHaveBeenCalledWith(
-      "passwordReset:mock-uuid",
+      expect.stringMatching(/^passwordReset:[a-f0-9]{64}$/),
       3600,
       "u1",
     );

@@ -23,7 +23,7 @@ services:
     container_name: identity-forge-redis-test
     ports:
       - "6380:6379"
-    command: redis-server --appendonly no
+    command: redis-server --appendonly no --save "" --stop-writes-on-bgsave-error no
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 2s

@@ -15,7 +15,6 @@ export {
 } from "./profile";
 export * from "./auth";
 export * from "./session";
-export { verifyHandler as captchaVerifyHandler } from "./captcha";
 export * from "./rbac";
 export {
   enableHandler,

@@ -2,6 +2,7 @@ export interface UserProps {
   id: string;
   email: string;
   password: string;
+  emailVerified: boolean;
   failedLoginAttempts: number;
   lockoutUntil?: Date;
   createdAt: Date;
