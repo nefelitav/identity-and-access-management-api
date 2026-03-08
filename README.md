@@ -1,4 +1,4 @@
-# Identity Forge
+# Identity and Access Management API
 
 > An Identity & Access Management (IAM) API built with **Node.js**, **Express 5**, **TypeScript**, **Prisma**, and **Redis**.
 
