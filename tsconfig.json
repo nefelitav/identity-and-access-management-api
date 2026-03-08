@@ -25,5 +25,12 @@
     "outDir": "dist",
     "rootDir": "."
   },
-  "include": ["apps/**/*.ts"]
+  "include": ["apps/**/*.ts"],
+  "exclude": [
+    "apps/api/tests",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "node_modules",
+    "dist"
+  ]
 }

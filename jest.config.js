@@ -1,10 +1,11 @@
-import type { Config } from "jest";
-
-const config: Config = {
+/** @type {import('jest').Config} */
+const config = {
   preset: "ts-jest",
   testEnvironment: "node",
   roots: ["<rootDir>/apps/api"],
   testMatch: ["**/*.test.ts", "**/*.spec.ts"],
+  testPathIgnorePatterns: ["/node_modules/", "/dist/"],
+  modulePathIgnorePatterns: ["<rootDir>/dist/"],
   setupFiles: ["<rootDir>/apps/api/tests/setup/jest.setup.ts"],
   moduleNameMapper: {
     "^@repo/prisma$": "<rootDir>/packages/prisma",
@@ -31,4 +32,4 @@ const config: Config = {
   verbose: true,
 };
 
-export default config;
+module.exports = config;

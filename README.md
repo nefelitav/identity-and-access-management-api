@@ -254,7 +254,16 @@ The codebase follows a **functional architecture** — no classes. All modules e
 
 ## Testing
 
+Integration and E2E tests run against **real PostgreSQL and Redis** instances (no mocks). A `docker-compose.test.yml` spins up isolated test containers on ports 5433 (Postgres) and 6380 (Redis).
+
 ```bash
+# Start test infrastructure
+docker compose -f docker-compose.test.yml up -d --wait
+
+# Push schema to test DB
+DATABASE_URL="postgresql://postgres:test_password@localhost:5433/identity_forge_test" \
+  npx prisma db push --schema=packages/prisma/prisma/schema.prisma
+
 # Run all tests
 yarn test
 
@@ -270,9 +279,9 @@ Tests live in `apps/api/tests/` and are organized by layer:
 ```
 tests/
 ├── setup/           # Jest setup (environment config)
-├── helpers/         # Shared test utilities (mock helpers, token factory)
+├── helpers/         # Shared test utilities (DB helpers, auth helpers)
 ├── unit/
-│   ├── controllers/ # Controller handler tests
+│   ├── controllers/ # Controller handler tests (mocked services)
 │   ├── core/        # DI container tests
 │   ├── domain/      # Domain factory tests
 │   ├── exceptions/  # Exception factory tests
@@ -280,8 +289,8 @@ tests/
 │   ├── services/    # Service logic tests (mocked repos)
 │   ├── utils/       # Utility function tests
 │   └── validation/  # Zod schema tests
-├── integration/     # Route-level tests (mocked services, real middleware)
-└── e2e/             # Multi-step flow tests (auth lifecycle, RBAC, etc.)
+├── integration/     # Route-level tests (real DB, real middleware)
+└── e2e/             # Multi-step flow tests (real DB end-to-end)
 ```
 
 ---

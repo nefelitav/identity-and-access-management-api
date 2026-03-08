@@ -69,7 +69,10 @@ export function errorHandler(
     success: false,
     error: {
       code,
-      message: statusCode >= 500 ? "Internal server error" : err.message,
+      message:
+        statusCode >= 500 && process.env.NODE_ENV !== "test"
+          ? "Internal server error"
+          : err.message,
     },
   });
 }

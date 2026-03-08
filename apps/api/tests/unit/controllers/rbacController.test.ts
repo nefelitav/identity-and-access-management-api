@@ -111,7 +111,7 @@ describe("deleteRoleHandler", () => {
   it("should delete a role by name", async () => {
     (rbacService.deleteRole as jest.Mock).mockResolvedValue(undefined);
 
-    const req = createMockReq({ params: { name: "editor" } });
+    const req = createMockReq({ body: { name: "editor" } });
     const res = createMockRes();
     const next = createMockNext();
 

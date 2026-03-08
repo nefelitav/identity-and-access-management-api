@@ -56,7 +56,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: runner
+      target: builder
     container_name: identity-forge-api
     environment:
       NODE_ENV: development
@@ -81,10 +81,14 @@ services:
     volumes:
       - ./apps/api:/app/apps/api
       - ./packages:/app/packages
+      - ./jest.config.js:/app/jest.config.js
+      - ./babel.config.ts:/app/babel.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
       - /app/node_modules
     networks:
       - identity-forge-network
     restart: unless-stopped
+    command: ["node", "-r", "module-alias/register", "./dist/apps/api/server.js"]
 
 volumes:
   postgres_data:
