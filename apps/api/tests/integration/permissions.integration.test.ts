@@ -132,8 +132,12 @@ describe("GET /permissions", () => {
 describe("GET /permissions/:userId", () => {
   it("should return 200 with user permissions", async () => {
     mockPermService.getUserPermissions.mockResolvedValue([
-      "read",
-      "write",
+      {
+        rolePermissions: [
+          { permission: { id: "p1", name: "read" } },
+          { permission: { id: "p2", name: "write" } },
+        ],
+      },
     ] as any);
 
     const res = await request(app).get("/permissions/u1").set(auth);
