@@ -2,6 +2,7 @@ jest.mock("~/core", () => ({
   container: { get: jest.fn() },
   SERVICE_IDENTIFIERS: {
     UserRepository: { serviceIdentifier: Symbol("UserRepository") },
+    DatabaseClient: { serviceIdentifier: Symbol("DatabaseClient") },
   },
 }));
 
@@ -14,7 +15,7 @@ jest.mock("~/utils", () => ({
   }),
 }));
 
-import { container } from "~/core";
+import { container, SERVICE_IDENTIFIERS } from "~/core";
 import * as adminService from "~/services/admin/adminService";
 
 const mockUserRepo = {
@@ -22,9 +23,18 @@ const mockUserRepo = {
   delete: jest.fn(),
 };
 
+const mockPrisma = {
+  user: {
+    deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+  },
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
-  (container.get as jest.Mock).mockReturnValue(mockUserRepo);
+  (container.get as jest.Mock).mockImplementation((id: any) => {
+    if (id === SERVICE_IDENTIFIERS.DatabaseClient) return mockPrisma;
+    return mockUserRepo;
+  });
 });
 
 describe("adminService.getUsers", () => {
@@ -41,24 +51,11 @@ describe("adminService.getUsers", () => {
 });
 
 describe("adminService.deleteUsers", () => {
-  it("should delete all users returned by findMany", async () => {
-    mockUserRepo.findMany.mockResolvedValue({
-      data: [{ id: "u1" }, { id: "u2" }],
-    });
-    mockUserRepo.delete.mockResolvedValue(undefined);
+  it("should call prisma.user.deleteMany()", async () => {
+    mockPrisma.user.deleteMany.mockResolvedValue({ count: 3 });
 
     await adminService.deleteUsers();
 
-    expect(mockUserRepo.delete).toHaveBeenCalledTimes(2);
-    expect(mockUserRepo.delete).toHaveBeenCalledWith("u1");
-    expect(mockUserRepo.delete).toHaveBeenCalledWith("u2");
-  });
-
-  it("should handle empty user list", async () => {
-    mockUserRepo.findMany.mockResolvedValue({ data: [] });
-
-    await adminService.deleteUsers();
-
-    expect(mockUserRepo.delete).not.toHaveBeenCalled();
+    expect(mockPrisma.user.deleteMany).toHaveBeenCalled();
   });
 });

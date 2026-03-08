@@ -6,7 +6,7 @@ import {
   deleteUsersHandler,
   updateProfileHandler,
 } from "~/controllers/admin/adminController";
-import { authMiddleware } from "~/middleware";
+import { authMiddleware, requireRole } from "~/middleware";
 import { validateRequest } from "~/middleware";
 import {
   getUserSchema,
@@ -18,7 +18,7 @@ import { adminWriteLimiter } from "~/utils";
 
 const adminRouter = express.Router();
 
-adminRouter.use(authMiddleware);
+adminRouter.use(authMiddleware, requireRole("admin"));
 
 adminRouter.get("/users", validateRequest(getUsersSchema), getUsersHandler);
 

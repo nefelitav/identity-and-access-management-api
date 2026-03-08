@@ -29,6 +29,10 @@ jest.mock("~/utils/createLogger", () => () => ({
   debug: jest.fn(),
 }));
 
+jest.mock("~/middleware/requireRole", () => ({
+  requireRole: () => (_req: any, _res: any, next: any) => next(),
+}));
+
 jest.mock("~/services/auth/authService");
 jest.mock("~/services/rbac/rbacService");
 jest.mock("~/services/rbac/permissionService");

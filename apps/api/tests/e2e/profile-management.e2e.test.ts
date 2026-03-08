@@ -79,8 +79,9 @@ describe("Profile management E2E", () => {
     // ── Step 3: Update Profile (email) ──────────────────
     const newEmail = "updated@test.com";
     mockProfile.updateProfile.mockResolvedValue({
-      accessToken: "new-at",
-      refreshToken: "new-rt",
+      id: userId,
+      email: newEmail,
+      updatedAt: new Date().toISOString(),
     } as any);
 
     const updateRes = await request(app)
@@ -90,7 +91,7 @@ describe("Profile management E2E", () => {
 
     expect(updateRes.status).toBe(200);
     expect(updateRes.body.success).toBe(true);
-    expect(updateRes.body.data.accessToken).toBe("new-at");
+    expect(updateRes.body.data.email).toBe(newEmail);
 
     // ── Step 4: Request Password Reset ──────────────────
     mockProfile.requestPasswordReset.mockResolvedValue(undefined);

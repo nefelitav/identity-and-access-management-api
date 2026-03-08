@@ -25,7 +25,7 @@ export function handleRequest(
           data: result,
         });
       } else {
-        res.sendStatus(successCode);
+        res.status(successCode).json({ success: true, data: null });
       }
     } catch (error) {
       next(error); // let the centralised error handler deal with it

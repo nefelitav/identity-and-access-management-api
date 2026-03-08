@@ -102,10 +102,7 @@ describe("Session management E2E", () => {
     // ── Step 3: Delete One Session ──────────────────────
     mockSessionService.deleteSession.mockResolvedValue(undefined);
 
-    const deleteOneRes = await request(app)
-      .delete("/sessions/s2")
-      .set(auth)
-      .send({ params: { sessionId: "s2" } });
+    const deleteOneRes = await request(app).delete("/sessions/s2").set(auth);
 
     expect(deleteOneRes.status).toBe(200);
     expect(mockSessionService.deleteSession).toHaveBeenCalledWith("s2");

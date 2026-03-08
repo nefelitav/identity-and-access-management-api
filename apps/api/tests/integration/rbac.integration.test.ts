@@ -23,6 +23,10 @@ jest.mock("~/utils/createLogger", () => () => ({
   debug: jest.fn(),
 }));
 
+jest.mock("~/middleware/requireRole", () => ({
+  requireRole: () => (_req: any, _res: any, next: any) => next(),
+}));
+
 jest.mock("~/services/rbac/rbacService");
 
 import request from "supertest";

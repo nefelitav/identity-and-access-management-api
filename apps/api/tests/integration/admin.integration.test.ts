@@ -29,6 +29,11 @@ jest.mock("~/utils/createLogger", () => ({
   }),
 }));
 
+// Mock requireRole to pass through in integration tests
+jest.mock("~/middleware/requireRole", () => ({
+  requireRole: () => (_req: any, _res: any, next: any) => next(),
+}));
+
 jest.mock("~/services/admin/adminService", () => ({
   __esModule: true,
   getUsers: (...args: any[]) => mockGetUsers(...args),

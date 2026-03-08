@@ -38,7 +38,10 @@ describe("requestCodeInEmailHandler", () => {
       undefined,
     );
 
-    const req = createMockReq({ body: { userId: "u1", email: "a@b.com" } });
+    const req = createMockReq({
+      body: { email: "a@b.com" },
+      user: { userId: "u1", sessionId: "s1" },
+    } as any);
     const res = createMockRes();
     const next = createMockNext();
 
@@ -58,7 +61,10 @@ describe("requestCodeInSmsHandler", () => {
       undefined,
     );
 
-    const req = createMockReq({ body: { userId: "u1", phone: "+123456" } });
+    const req = createMockReq({
+      body: { phone: "+123456" },
+      user: { userId: "u1", sessionId: "s1" },
+    } as any);
     const res = createMockRes();
     const next = createMockNext();
 
@@ -76,7 +82,10 @@ describe("verifyCodeHandler", () => {
   it("should return isValid true when code is correct", async () => {
     (otpService.verifyCode as jest.Mock).mockResolvedValue(true);
 
-    const req = createMockReq({ body: { userId: "u1", code: "123456" } });
+    const req = createMockReq({
+      body: { code: "123456" },
+      user: { userId: "u1", sessionId: "s1" },
+    } as any);
     const res = createMockRes();
     const next = createMockNext();
 
@@ -89,7 +98,10 @@ describe("verifyCodeHandler", () => {
   it("should throw InvalidOtpTokenException when code is invalid", async () => {
     (otpService.verifyCode as jest.Mock).mockResolvedValue(false);
 
-    const req = createMockReq({ body: { userId: "u1", code: "000000" } });
+    const req = createMockReq({
+      body: { code: "000000" },
+      user: { userId: "u1", sessionId: "s1" },
+    } as any);
     const res = createMockRes();
     const next = createMockNext();
 

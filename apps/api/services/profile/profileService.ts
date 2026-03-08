@@ -4,32 +4,37 @@ import { container, SERVICE_IDENTIFIERS } from "~/core";
 import { UserRepository } from "~/repositories";
 import { UserNotFoundException } from "~/exceptions";
 import { createSessionService } from "~/services/session/sessionService";
-import { SALT, sendEmail, generateTokens } from "~/utils";
+import { SALT, sendEmail } from "~/utils";
 import redisClient from "~/utils/redis";
 
 function getUserRepository() {
   return container.get<UserRepository>(SERVICE_IDENTIFIERS.UserRepository);
 }
 
-/** Update a user's profile (email / password) and issue fresh tokens. */
+/** Update a user's profile (email / password). */
 export async function updateProfile({
   userId,
   email,
   password,
-  userAgent,
-  ip,
 }: {
   userId?: string;
   email?: string;
   password?: string;
-  userAgent?: string;
-  ip?: string;
 }) {
   if (!userId) throw UserNotFoundException();
 
   const userRepository = getUserRepository();
   const user = await userRepository.findById(userId);
   if (!user) throw UserNotFoundException();
+
+  // Check email uniqueness before updating
+  if (email && email !== user.email) {
+    const exists = await userRepository.existsByEmail(email);
+    if (exists) {
+      const { EmailAlreadyInUseException } = await import("~/exceptions");
+      throw EmailAlreadyInUseException(email);
+    }
+  }
 
   const updateData: any = {};
   if (email) updateData.email = email;
@@ -38,12 +43,11 @@ export async function updateProfile({
   }
 
   const updatedUser = await userRepository.update(userId, updateData);
-  const tokens = await generateTokens(updatedUser.id, userAgent, ip);
 
   return {
-    ...updatedUser,
+    id: updatedUser.id,
+    email: updatedUser.email,
     updatedAt: updatedUser.updatedAt.toISOString(),
-    ...tokens,
   };
 }
 
@@ -101,7 +105,7 @@ export async function getUser(userId?: string) {
 
 async function generateResetToken(userId: string) {
   const token = uuidv4();
-  await redisClient.set(`passwordReset:${token}`, userId);
+  await redisClient.setEx(`passwordReset:${token}`, 3600, userId); // 1-hour TTL
   return token;
 }
 

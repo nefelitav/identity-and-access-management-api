@@ -105,6 +105,14 @@ describe("POST /mfa/totp/disable", () => {
 // ── OTP ───────────────────────────────────────────────
 
 describe("POST /mfa/otp/request-email", () => {
+  it("should return 401 without auth", async () => {
+    const res = await request(app)
+      .post("/mfa/otp/request-email")
+      .send({ email: "user@test.com" });
+
+    expect(res.status).toBe(401);
+  });
+
   it("should return 200 on success", async () => {
     mockOtpService.generateAndSendCodeViaEmail.mockResolvedValue(
       undefined as any,
@@ -112,13 +120,22 @@ describe("POST /mfa/otp/request-email", () => {
 
     const res = await request(app)
       .post("/mfa/otp/request-email")
-      .send({ userId: "u1", email: "user@test.com" });
+      .set(auth)
+      .send({ email: "user@test.com" });
 
     expect(res.status).toBe(200);
   });
 });
 
 describe("POST /mfa/otp/request-sms", () => {
+  it("should return 401 without auth", async () => {
+    const res = await request(app)
+      .post("/mfa/otp/request-sms")
+      .send({ phone: "+1234567890" });
+
+    expect(res.status).toBe(401);
+  });
+
   it("should return 200 on success", async () => {
     mockOtpService.generateAndSendCodeViaSms.mockResolvedValue(
       undefined as any,
@@ -126,19 +143,29 @@ describe("POST /mfa/otp/request-sms", () => {
 
     const res = await request(app)
       .post("/mfa/otp/request-sms")
-      .send({ userId: "u1", phone: "+1234567890" });
+      .set(auth)
+      .send({ phone: "+1234567890" });
 
     expect(res.status).toBe(200);
   });
 });
 
 describe("POST /mfa/otp/verify", () => {
+  it("should return 401 without auth", async () => {
+    const res = await request(app)
+      .post("/mfa/otp/verify")
+      .send({ code: "123456" });
+
+    expect(res.status).toBe(401);
+  });
+
   it("should return 200 with isValid true", async () => {
     mockOtpService.verifyCode.mockResolvedValue(true);
 
     const res = await request(app)
       .post("/mfa/otp/verify")
-      .send({ userId: "u1", code: "123456" });
+      .set(auth)
+      .send({ code: "123456" });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);

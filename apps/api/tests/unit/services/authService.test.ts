@@ -14,6 +14,7 @@ jest.mock("~/core", () => {
     SERVICE_IDENTIFIERS: {
       UserRepository: { serviceIdentifier: Symbol("UserRepository") },
       SessionRepository: { serviceIdentifier: Symbol("SessionRepository") },
+      TotpRepository: { serviceIdentifier: Symbol("TotpRepository") },
     },
   };
 });
@@ -61,7 +62,7 @@ jest.mock("~/services/session/sessionService", () => ({
   },
 }));
 
-import { container } from "~/core";
+import { container, SERVICE_IDENTIFIERS } from "~/core";
 import * as authService from "~/services/auth/authService";
 
 const mockUserRepo = {
@@ -76,9 +77,16 @@ const mockUserRepo = {
   ),
 };
 
+const mockTotpRepo = {
+  getSecretByUserId: jest.fn().mockResolvedValue(null), // MFA not enabled by default
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
-  (container.get as jest.Mock).mockReturnValue(mockUserRepo);
+  (container.get as jest.Mock).mockImplementation((id: any) => {
+    if (id === SERVICE_IDENTIFIERS.TotpRepository) return mockTotpRepo;
+    return mockUserRepo;
+  });
 });
 
 describe("authService.register", () => {

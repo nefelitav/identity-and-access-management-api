@@ -9,46 +9,19 @@ import {
   getUserPermissionsHandler,
 } from "~/controllers/rbac/permissionController";
 import { adminWriteLimiter } from "~/utils";
-import { authMiddleware } from "~/middleware";
+import { authMiddleware, requireRole } from "~/middleware";
 
 const permissionRouter = Router();
 
-permissionRouter.get("/check", authMiddleware, adminWriteLimiter, checkHandler);
-permissionRouter.post(
-  "/grant",
-  authMiddleware,
-  adminWriteLimiter,
-  grantHandler,
-);
-permissionRouter.post(
-  "/revoke",
-  authMiddleware,
-  adminWriteLimiter,
-  revokeHandler,
-);
-permissionRouter.post(
-  "/add",
-  authMiddleware,
-  adminWriteLimiter,
-  addPermissionHandler,
-);
-permissionRouter.delete(
-  "/delete",
-  authMiddleware,
-  adminWriteLimiter,
-  deletePermissionHandler,
-);
-permissionRouter.get(
-  "/",
-  authMiddleware,
-  adminWriteLimiter,
-  getAllPermissionsHandler,
-);
-permissionRouter.get(
-  "/:userId",
-  authMiddleware,
-  adminWriteLimiter,
-  getUserPermissionsHandler,
-);
+// All permission management routes require admin role
+permissionRouter.use(authMiddleware, requireRole("admin"));
+
+permissionRouter.get("/check", adminWriteLimiter, checkHandler);
+permissionRouter.post("/grant", adminWriteLimiter, grantHandler);
+permissionRouter.post("/revoke", adminWriteLimiter, revokeHandler);
+permissionRouter.post("/add", adminWriteLimiter, addPermissionHandler);
+permissionRouter.delete("/delete", adminWriteLimiter, deletePermissionHandler);
+permissionRouter.get("/", adminWriteLimiter, getAllPermissionsHandler);
+permissionRouter.get("/:userId", adminWriteLimiter, getUserPermissionsHandler);
 
 export { permissionRouter };

@@ -23,7 +23,7 @@ jest.mock("~/utils", () => ({
 
 jest.mock("~/utils/redis", () => ({
   __esModule: true,
-  default: { set: jest.fn(), get: jest.fn(), del: jest.fn() },
+  default: { set: jest.fn(), setEx: jest.fn(), get: jest.fn(), del: jest.fn() },
 }));
 
 jest.mock("~/services/session/sessionService", () => ({
@@ -45,6 +45,7 @@ import redis from "~/utils/redis";
 const mockUserRepo = {
   findByEmail: jest.fn(),
   findById: jest.fn(),
+  existsByEmail: jest.fn().mockResolvedValue(false),
   create: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
@@ -70,11 +71,12 @@ describe("profileService.updateProfile", () => {
     ).rejects.toMatchObject({ name: "UserNotFoundException" });
   });
 
-  it("should update email and return tokens", async () => {
+  it("should update email and return updated user", async () => {
     mockUserRepo.findById.mockResolvedValue({
       id: "u1",
       email: "old@test.com",
     });
+    mockUserRepo.existsByEmail.mockResolvedValue(false);
     mockUserRepo.update.mockResolvedValue({
       id: "u1",
       email: "new@test.com",
@@ -89,7 +91,9 @@ describe("profileService.updateProfile", () => {
     expect(mockUserRepo.update).toHaveBeenCalledWith("u1", {
       email: "new@test.com",
     });
-    expect(result).toHaveProperty("accessToken");
+    expect(result).toHaveProperty("id", "u1");
+    expect(result).toHaveProperty("email", "new@test.com");
+    expect(result).toHaveProperty("updatedAt");
   });
 
   it("should hash password before updating", async () => {
@@ -141,7 +145,11 @@ describe("profileService.requestPasswordReset", () => {
 
     await profileService.requestPasswordReset("user@test.com");
 
-    expect(redis.set).toHaveBeenCalledWith("passwordReset:mock-uuid", "u1");
+    expect(redis.setEx).toHaveBeenCalledWith(
+      "passwordReset:mock-uuid",
+      3600,
+      "u1",
+    );
     const { sendEmail } = require("~/utils");
     expect(sendEmail).toHaveBeenCalled();
   });

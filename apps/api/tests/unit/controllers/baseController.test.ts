@@ -51,7 +51,7 @@ describe("handleRequest", () => {
     expect(res.status).toHaveBeenCalledWith(201);
   });
 
-  it("should call sendStatus when handler returns null", async () => {
+  it("should return JSON with success true when handler returns null", async () => {
     const handler = handleRequest(async () => null);
     const req = createMockReq();
     const res = createMockRes();
@@ -59,8 +59,8 @@ describe("handleRequest", () => {
 
     await handler(req, res, next);
 
-    expect(res.sendStatus).toHaveBeenCalledWith(200);
-    expect(res.json).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ success: true, data: null });
   });
 
   it("should forward errors to next()", async () => {

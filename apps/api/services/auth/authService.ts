@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { container, SERVICE_IDENTIFIERS } from "~/core";
-import { UserRepository } from "~/repositories";
+import { UserRepository, TotpRepository } from "~/repositories";
 import {
   EmailAlreadyInUseException,
   InvalidCredentialsException,
@@ -23,6 +23,10 @@ const LOCKOUT_DURATION_MINUTES = 15;
 
 function getUserRepository() {
   return container.get<UserRepository>(SERVICE_IDENTIFIERS.UserRepository);
+}
+
+function getTotpRepository() {
+  return container.get<TotpRepository>(SERVICE_IDENTIFIERS.TotpRepository);
 }
 
 export async function register({
@@ -137,6 +141,30 @@ export async function login({
       });
     }
 
+    // Check if user has MFA enabled — if so, return a short-lived challenge token
+    const totpRepo = getTotpRepository();
+    const mfaSecret = await totpRepo.getSecretByUserId(user.id);
+
+    if (mfaSecret?.enabled) {
+      if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined");
+
+      const mfaToken = jwt.sign(
+        {
+          userId: user.id,
+          purpose: "mfa-challenge",
+          iss: "identity-forge-api",
+          aud: "identity-forge-client",
+        },
+        JWT_SECRET,
+        { expiresIn: 300, algorithm: "HS256" }, // 5 minutes
+      );
+
+      return {
+        mfaRequired: true,
+        mfaToken,
+      };
+    }
+
     return generateTokens(user.id, userAgent, ip, remember);
   });
 }
@@ -194,4 +222,43 @@ export async function refreshToken(refreshTokenValue: string) {
   );
 
   return { accessToken: newAccessToken };
+}
+
+/** Complete login after MFA verification. */
+export async function verifyMfaLogin({
+  mfaToken,
+  code,
+  userAgent,
+  ip,
+}: {
+  mfaToken: string;
+  code: string;
+  userAgent?: string;
+  ip?: string;
+}) {
+  if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined");
+
+  let payload: any;
+  try {
+    payload = jwt.verify(mfaToken, JWT_SECRET, {
+      algorithms: ["HS256"],
+      issuer: "identity-forge-api",
+      audience: "identity-forge-client",
+    });
+  } catch {
+    throw InvalidCredentialsException();
+  }
+
+  if (payload.purpose !== "mfa-challenge" || !payload.userId) {
+    throw InvalidCredentialsException();
+  }
+
+  // Import verifyCode dynamically to avoid circular dependency
+  const { verifyCode } = await import("~/services/mfa/totpService");
+  const isValid = await verifyCode(payload.userId, code);
+  if (!isValid) {
+    throw InvalidCredentialsException();
+  }
+
+  return generateTokens(payload.userId, userAgent, ip);
 }
