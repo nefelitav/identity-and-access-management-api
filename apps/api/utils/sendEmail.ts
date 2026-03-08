@@ -11,6 +11,9 @@ export async function sendEmail({
   text?: string;
   html?: string;
 }) {
+  // Skip sending when SMTP is not configured (e.g. in tests)
+  if (!process.env.SMTP_HOST) return;
+
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT),

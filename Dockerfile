@@ -6,6 +6,7 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/prisma/package.json ./packages/prisma/package.json
+COPY packages/prisma/prisma/schema.prisma ./packages/prisma/prisma/schema.prisma
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 RUN yarn --frozen-lockfile --production=false
@@ -22,7 +23,12 @@ RUN yarn workspace @repo/prisma prisma generate --schema=./prisma/schema.prisma
 RUN yarn workspace @repo/prisma build
 RUN yarn workspace @repo/api build
 
-# ── Stage 3: Production image ────────────────────────────────
+# ── Stage 3: Test (CI only – use: docker build --target test) ─
+FROM builder AS test
+ENV NODE_ENV=test
+CMD ["yarn", "test"]
+
+# ── Stage 4: Production image ────────────────────────────────
 FROM node:20-alpine AS runner
 WORKDIR /app
 

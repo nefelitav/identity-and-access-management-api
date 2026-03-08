@@ -50,7 +50,7 @@ export const createRoleHandler = handleRequest(async (req) => {
 
 /** Delete an existing role by name. */
 export const deleteRoleHandler = handleRequest(async (req) => {
-  const { name } = req.params;
+  const { name } = req.body;
   await rbacService.deleteRole(name);
 
   logger.info(`Deleted role: "${name}"`);

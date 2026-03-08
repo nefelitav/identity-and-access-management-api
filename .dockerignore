@@ -12,11 +12,5 @@ coverage/
 .turbo/
 *.log
 .DS_Store
-apps/api/tests/
-jest.config.*
-babel.config.*
-eslint.config.*
-commitlint.config.*
-tsconfig.json
 turbo.json
 

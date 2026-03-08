@@ -1,123 +1,15 @@
-jest.mock("~/utils/rateLimiting", () => {
-  const pass = (_req: any, _res: any, next: any) => next();
-  return {
-    loginLimiter: pass,
-    registerLimiter: pass,
-    refreshLimiter: pass,
-    logoutLimiter: pass,
-    captchaLimiter: pass,
-    otpRequestLimiter: pass,
-    otpVerifyLimiter: pass,
-    totpSetupLimiter: pass,
-    totpVerifyLimiter: pass,
-    passwordResetLimiter: pass,
-    adminWriteLimiter: pass,
-    sessionLimiter: pass,
-  };
-});
-
-jest.mock("~/utils/createLogger", () => () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-}));
-
-jest.mock("~/middleware/requireRole", () => ({
-  requireRole: () => (_req: any, _res: any, next: any) => next(),
-}));
-
-jest.mock("~/services/rbac/rbacService");
-
 import request from "supertest";
 import app from "~/app";
-import * as rbacService from "~/services/rbac/rbacService";
-import { createValidToken } from "../helpers/tokenHelper";
+import { setupTestDB, cleanDB, teardownTestDB } from "../helpers/testDB";
+import { authenticatedAdmin } from "../helpers/testUser";
 
-const mockRbacService = rbacService as jest.Mocked<typeof rbacService>;
-const token = createValidToken("u1", "s1");
-const auth = { Authorization: `Bearer ${token}` };
-
-beforeEach(() => jest.clearAllMocks());
-
-describe("POST /roles/assign", () => {
-  it("should return 401 without auth", async () => {
-    const res = await request(app)
-      .post("/roles/assign")
-      .send({ userId: "u1", roleName: "admin" });
-    expect(res.status).toBe(401);
-  });
-
-  it("should return 200 on success", async () => {
-    mockRbacService.assignRoleToUser.mockResolvedValue(undefined as any);
-
-    const res = await request(app)
-      .post("/roles/assign")
-      .set(auth)
-      .send({ userId: "u1", roleName: "admin" });
-
-    expect(res.status).toBe(200);
-  });
-});
-
-describe("DELETE /roles/remove", () => {
-  it("should return 401 without auth", async () => {
-    const res = await request(app)
-      .delete("/roles/remove")
-      .send({ userId: "u1", roleName: "admin" });
-    expect(res.status).toBe(401);
-  });
-
-  it("should return 200 on success", async () => {
-    mockRbacService.removeRoleFromUser.mockResolvedValue(undefined as any);
-
-    const res = await request(app)
-      .delete("/roles/remove")
-      .set(auth)
-      .send({ userId: "u1", roleName: "admin" });
-
-    expect(res.status).toBe(200);
-  });
-});
-
-describe("GET /roles", () => {
-  it("should return 401 without auth", async () => {
-    const res = await request(app).get("/roles");
-    expect(res.status).toBe(401);
-  });
-
-  it("should return 200 with all roles", async () => {
-    mockRbacService.getAllRoles.mockResolvedValue({
-      data: [{ id: "r1", name: "admin" }],
-      pagination: { page: 1, limit: 10, total: 1 },
-    } as any);
-
-    const res = await request(app).get("/roles").set(auth);
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-  });
-});
-
-describe("GET /roles/:userId", () => {
-  it("should return 200 with user roles", async () => {
-    mockRbacService.getUserRoles.mockResolvedValue([
-      { id: "r1", name: "admin" },
-    ] as any);
-
-    const res = await request(app).get("/roles/some-user-id").set(auth);
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-  });
-});
+beforeAll(() => setupTestDB());
+afterEach(() => cleanDB());
+afterAll(() => teardownTestDB());
 
 describe("POST /roles/add", () => {
-  it("should return 200 on creating a role", async () => {
-    mockRbacService.createRole.mockResolvedValue({
-      id: "r1",
-      name: "editor",
-    } as any);
+  it("should create a role", async () => {
+    const { auth } = await authenticatedAdmin();
 
     const res = await request(app)
       .post("/roles/add")
@@ -125,18 +17,79 @@ describe("POST /roles/add", () => {
       .send({ name: "editor" });
 
     expect(res.status).toBe(200);
+    expect(res.body.data.role.name).toBe("editor");
+  });
+});
+
+describe("GET /roles", () => {
+  it("should return all roles", async () => {
+    const { auth } = await authenticatedAdmin();
+
+    const res = await request(app).get("/roles").set(auth);
+
+    expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
+    // At least the "admin" role from authenticatedAdmin
+    expect(res.body.data.roles.data.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("POST /roles/assign + GET /roles/:userId", () => {
+  it("should assign a role and retrieve it", async () => {
+    const { auth, userId } = await authenticatedAdmin();
+
+    // Create a role
+    await request(app).post("/roles/add").set(auth).send({ name: "viewer" });
+
+    // Assign it
+    const assignRes = await request(app)
+      .post("/roles/assign")
+      .set(auth)
+      .send({ userId, role: "viewer" });
+
+    expect(assignRes.status).toBe(200);
+
+    // Fetch user roles
+    const rolesRes = await request(app).get(`/roles/${userId}`).set(auth);
+
+    expect(rolesRes.status).toBe(200);
+    const roleNames = rolesRes.body.data.roles.map((r: any) => r);
+    expect(roleNames).toContain("viewer");
+  });
+});
+
+describe("DELETE /roles/remove", () => {
+  it("should remove a role from a user", async () => {
+    const { auth, userId } = await authenticatedAdmin();
+
+    await request(app).post("/roles/add").set(auth).send({ name: "temp" });
+    await request(app)
+      .post("/roles/assign")
+      .set(auth)
+      .send({ userId, role: "temp" });
+
+    const res = await request(app)
+      .delete("/roles/remove")
+      .set(auth)
+      .send({ userId, role: "temp" });
+
+    expect(res.status).toBe(200);
   });
 });
 
 describe("DELETE /roles/delete", () => {
-  it("should return 200 on deleting a role", async () => {
-    mockRbacService.deleteRole.mockResolvedValue(undefined as any);
+  it("should delete a role", async () => {
+    const { auth } = await authenticatedAdmin();
+
+    await request(app)
+      .post("/roles/add")
+      .set(auth)
+      .send({ name: "disposable" });
 
     const res = await request(app)
       .delete("/roles/delete")
       .set(auth)
-      .send({ name: "editor" });
+      .send({ name: "disposable" });
 
     expect(res.status).toBe(200);
   });

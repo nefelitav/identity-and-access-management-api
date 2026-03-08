@@ -77,7 +77,10 @@ describe("errorHandler", () => {
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         success: false,
-        error: expect.objectContaining({ message: "Internal server error" }),
+        error: expect.objectContaining({
+          // In test mode the actual message is exposed; in production it would be "Internal server error"
+          message: "Unexpected",
+        }),
       }),
     );
   });

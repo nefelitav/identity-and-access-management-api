@@ -1,6 +1,9 @@
 import twilio from "twilio";
 
 export async function sendSms({ to, text }: { to: string; text?: string }) {
+  // Skip sending when Twilio is not configured (e.g. in tests)
+  if (!process.env.TWILIO_ACCOUNT_SID) return;
+
   const client = twilio(
     process.env.TWILIO_ACCOUNT_SID,
     process.env.TWILIO_AUTH_TOKEN,

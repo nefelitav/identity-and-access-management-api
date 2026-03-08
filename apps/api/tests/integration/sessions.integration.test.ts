@@ -1,50 +1,11 @@
-jest.mock("~/utils/rateLimiting", () => {
-  const pass = (_req: any, _res: any, next: any) => next();
-  return {
-    loginLimiter: pass,
-    registerLimiter: pass,
-    refreshLimiter: pass,
-    logoutLimiter: pass,
-    captchaLimiter: pass,
-    otpRequestLimiter: pass,
-    otpVerifyLimiter: pass,
-    totpSetupLimiter: pass,
-    totpVerifyLimiter: pass,
-    passwordResetLimiter: pass,
-    adminWriteLimiter: pass,
-    sessionLimiter: pass,
-  };
-});
-
-jest.mock("~/utils/createLogger", () => () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-}));
-
-jest.mock("~/services/session/sessionService");
-
 import request from "supertest";
 import app from "~/app";
-import { createSessionService } from "~/services/session/sessionService";
-import { createValidToken } from "../helpers/tokenHelper";
+import { setupTestDB, cleanDB, teardownTestDB } from "../helpers/testDB";
+import { authenticatedUser } from "../helpers/testUser";
 
-const mockSessionService = {
-  getSessions: jest.fn(),
-  deleteSession: jest.fn(),
-  deleteAllSessions: jest.fn(),
-};
-
-(createSessionService as jest.Mock).mockReturnValue(mockSessionService);
-
-const token = createValidToken("u1", "s1");
-const auth = { Authorization: `Bearer ${token}` };
-
-beforeEach(() => {
-  jest.clearAllMocks();
-  (createSessionService as jest.Mock).mockReturnValue(mockSessionService);
-});
+beforeAll(() => setupTestDB());
+afterEach(() => cleanDB());
+afterAll(() => teardownTestDB());
 
 describe("GET /sessions", () => {
   it("should return 401 without auth", async () => {
@@ -53,44 +14,40 @@ describe("GET /sessions", () => {
   });
 
   it("should return 200 with session list", async () => {
-    mockSessionService.getSessions.mockResolvedValue([
-      {
-        id: "s1",
-        userAgent: "jest",
-        ipAddress: "127.0.0.1",
-        createdAt: new Date(),
-        lastActiveAt: new Date(),
-      },
-    ]);
+    const { auth } = await authenticatedUser("sess@test.com");
 
     const res = await request(app).get("/sessions").set(auth);
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data.sessions)).toBe(true);
+    expect(res.body.data.sessions.length).toBeGreaterThanOrEqual(1);
   });
 });
 
 describe("DELETE /sessions/:sessionId", () => {
   it("should return 401 without auth", async () => {
-    const res = await request(app).delete("/sessions/s1");
+    const res = await request(app).delete("/sessions/fake-id");
     expect(res.status).toBe(401);
   });
 
-  it("should return 200 on successful delete", async () => {
-    mockSessionService.deleteSession.mockResolvedValue(undefined);
+  it("should delete a specific session", async () => {
+    const { auth } = await authenticatedUser("delsess@test.com");
 
-    const res = await request(app).delete("/sessions/s1").set(auth);
+    // List sessions, grab first one
+    const listRes = await request(app).get("/sessions").set(auth);
+    const sessionId = listRes.body.data.sessions[0].id;
 
+    const res = await request(app).delete(`/sessions/${sessionId}`).set(auth);
     expect(res.status).toBe(200);
   });
 });
 
 describe("DELETE /sessions", () => {
-  it("should return 200 when deleting all sessions", async () => {
-    mockSessionService.deleteAllSessions.mockResolvedValue(undefined);
+  it("should delete all sessions", async () => {
+    const { auth } = await authenticatedUser("delall@test.com");
 
     const res = await request(app).delete("/sessions").set(auth);
-
     expect(res.status).toBe(200);
   });
 });
