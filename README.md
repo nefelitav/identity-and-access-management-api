@@ -283,7 +283,7 @@ tests/
 │   ├── core/        # DI container tests
 │   ├── domain/      # Domain factory tests
 │   ├── exceptions/  # Exception factory tests
-│   ├── middleware/   # Error handler & validation tests
+│   ├── middleware/  # Error handler & validation tests
 │   ├── services/    # Service logic tests (mocked repos)
 │   ├── utils/       # Utility function tests
 │   └── validation/  # Zod schema tests
