@@ -8,7 +8,7 @@ import {
 } from "~/controllers/profile/profileController";
 import { authMiddleware, validateRequest } from "~/middleware";
 import { updateProfileSchema } from "~/validation/schemas";
-import { passwordResetLimiter } from "~/utils";
+import { passwordResetLimiter, profileLimiter } from "~/utils";
 
 const profileRouter = express.Router();
 
@@ -23,13 +23,14 @@ profileRouter.post(
   resetPasswordHandler,
 );
 
-profileRouter.get("/", authMiddleware, getUserHandler);
+profileRouter.get("/", profileLimiter, authMiddleware, getUserHandler);
 profileRouter.put(
   "/",
+  profileLimiter,
   authMiddleware,
   validateRequest(updateProfileSchema),
   updateProfileHandler,
 );
-profileRouter.delete("/", authMiddleware, deleteUserHandler);
+profileRouter.delete("/", profileLimiter, authMiddleware, deleteUserHandler);
 
 export { profileRouter };

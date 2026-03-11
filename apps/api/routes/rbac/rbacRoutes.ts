@@ -7,12 +7,12 @@ import {
   deleteRoleHandler,
   createRoleHandler,
 } from "~/controllers/rbac/rbacController";
-import { adminWriteLimiter } from "~/utils";
+import { adminWriteLimiter, adminLimiter } from "~/utils";
 import { authMiddleware, requireRole } from "~/middleware";
 
 const rbacRouter = Router();
 
-rbacRouter.use(authMiddleware, requireRole("admin"));
+rbacRouter.use(adminLimiter, authMiddleware, requireRole("admin"));
 
 rbacRouter.post("/assign", adminWriteLimiter, assignRoleHandler);
 rbacRouter.delete("/remove", adminWriteLimiter, removeRoleHandler);

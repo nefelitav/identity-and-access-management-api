@@ -17,6 +17,7 @@ import {
   JWT_SECRET,
   SALT,
   sendEmail,
+  escapeHtml,
 } from "~/utils";
 import { config } from "~/config";
 import redisClient from "~/utils/redis";
@@ -193,8 +194,8 @@ export async function login({
         html: `<p>Hi,</p>
           <p>We detected a login to your account from a new device or location.</p>
           <p><strong>Details:</strong><br>
-          IP Address: ${ip}<br>
-          Device/Browser: ${userAgent}</p>
+          IP Address: ${escapeHtml(ip ?? "unknown")}<br>
+          Device/Browser: ${escapeHtml(userAgent ?? "unknown")}</p>
           <p>If this was you, no action is needed.<br>
           If you did NOT authorize this login, please reset your password immediately and review your account's active sessions.</p>
           <p>Stay safe,<br>Identity Forge Security Team</p>`,

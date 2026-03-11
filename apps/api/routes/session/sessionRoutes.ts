@@ -9,17 +9,17 @@ import { sessionLimiter } from "~/utils";
 
 const sessionRouter = Router();
 
-sessionRouter.get("/", authMiddleware, sessionLimiter, listSessionsHandler);
+sessionRouter.get("/", sessionLimiter, authMiddleware, listSessionsHandler);
 sessionRouter.delete(
   "/:sessionId",
-  authMiddleware,
   sessionLimiter,
+  authMiddleware,
   deleteSessionHandler,
 );
 sessionRouter.delete(
   "/",
-  authMiddleware,
   sessionLimiter,
+  authMiddleware,
   deleteAllSessionsHandler,
 );
 

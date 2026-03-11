@@ -9,10 +9,18 @@ import { authMiddleware } from "~/middleware";
 
 const otpRouter = Router();
 
-otpRouter.use(authMiddleware);
-
-otpRouter.post("/request-sms", otpRequestLimiter, requestCodeInSmsHandler);
-otpRouter.post("/request-email", otpRequestLimiter, requestCodeInEmailHandler);
-otpRouter.post("/verify", otpVerifyLimiter, verifyCodeHandler);
+otpRouter.post(
+  "/request-sms",
+  otpRequestLimiter,
+  authMiddleware,
+  requestCodeInSmsHandler,
+);
+otpRouter.post(
+  "/request-email",
+  otpRequestLimiter,
+  authMiddleware,
+  requestCodeInEmailHandler,
+);
+otpRouter.post("/verify", otpVerifyLimiter, authMiddleware, verifyCodeHandler);
 
 export { otpRouter };

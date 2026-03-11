@@ -19,6 +19,7 @@ import {
   logoutLimiter,
   refreshLimiter,
   registerLimiter,
+  emailVerifyLimiter,
 } from "~/utils";
 
 const authRouter = express.Router();
@@ -46,16 +47,16 @@ authRouter.post(
   refreshTokenHandler,
 );
 
-authRouter.post("/logout", authMiddleware, logoutLimiter, logoutHandler);
+authRouter.post("/logout", logoutLimiter, authMiddleware, logoutHandler);
 
 authRouter.post("/mfa-verify", loginLimiter, verifyMfaLoginHandler);
 
-authRouter.post("/verify-email", verifyEmailHandler);
+authRouter.post("/verify-email", emailVerifyLimiter, verifyEmailHandler);
 
 authRouter.post(
   "/resend-verification",
-  authMiddleware,
   registerLimiter,
+  authMiddleware,
   resendVerificationHandler,
 );
 

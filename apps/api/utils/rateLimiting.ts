@@ -117,6 +117,18 @@ export const passwordResetLimiter = rateLimit({
   },
 });
 
+export const adminLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  skip: () => isTest,
+  message: {
+    success: false,
+    error: { message: "Too many admin requests, try again later." },
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 export const adminWriteLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
@@ -135,4 +147,42 @@ export const sessionLimiter = rateLimit({
     success: false,
     error: { message: "Too many session requests, try again later." },
   },
+});
+
+export const profileLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  skip: () => isTest,
+  message: {
+    success: false,
+    error: { message: "Too many profile requests, try again later." },
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+export const healthLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  skip: () => isTest,
+  message: {
+    success: false,
+    error: { message: "Too many health-check requests, try again later." },
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+export const emailVerifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  skip: () => isTest,
+  message: {
+    success: false,
+    error: {
+      message: "Too many email verification attempts, try again later.",
+    },
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });

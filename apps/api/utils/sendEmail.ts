@@ -1,5 +1,18 @@
 import nodemailer from "nodemailer";
 
+/**
+ * Escapes a string for safe interpolation into HTML, preventing
+ * cross-site scripting (XSS) and HTML injection.
+ */
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export async function sendEmail({
   to,
   subject,

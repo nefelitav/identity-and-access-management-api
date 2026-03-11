@@ -14,11 +14,11 @@ import {
   deleteUserSchema,
   adminUpdateProfileSchema,
 } from "~/validation/schemas";
-import { adminWriteLimiter } from "~/utils";
+import { adminWriteLimiter, adminLimiter } from "~/utils";
 
 const adminRouter = express.Router();
 
-adminRouter.use(authMiddleware, requireRole("admin"));
+adminRouter.use(adminLimiter, authMiddleware, requireRole("admin"));
 
 adminRouter.get("/users", validateRequest(getUsersSchema), getUsersHandler);
 
