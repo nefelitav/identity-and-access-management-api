@@ -8,12 +8,12 @@ import {
   getAllPermissionsHandler,
   getUserPermissionsHandler,
 } from "~/controllers/rbac/permissionController";
-import { adminWriteLimiter } from "~/utils";
+import { adminWriteLimiter, adminLimiter } from "~/utils";
 import { authMiddleware, requireRole } from "~/middleware";
 
 const permissionRouter = Router();
 
-permissionRouter.use(authMiddleware, requireRole("admin"));
+permissionRouter.use(adminLimiter, authMiddleware, requireRole("admin"));
 
 permissionRouter.get("/check", adminWriteLimiter, checkHandler);
 permissionRouter.post("/grant", adminWriteLimiter, grantHandler);

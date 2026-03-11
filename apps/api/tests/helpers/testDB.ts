@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { createClient, RedisClientType } from "redis";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import path from "path";
 import { container, SERVICE_IDENTIFIERS } from "~/core";
 import { initializeServices } from "~/core/serviceFactory";
@@ -32,8 +32,16 @@ export async function setupTestDB() {
   process.env.SMTP_HOST = "";
 
   try {
-    execSync(
-      `npx prisma db push --skip-generate --accept-data-loss --schema=${schemaPath()}`,
+    execFileSync(
+      "npx",
+      [
+        "prisma",
+        "db",
+        "push",
+        "--skip-generate",
+        "--accept-data-loss",
+        `--schema=${schemaPath()}`,
+      ],
       {
         env: { ...process.env, DATABASE_URL: TEST_DATABASE_URL },
         stdio: "pipe",

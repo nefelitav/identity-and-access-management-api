@@ -10,14 +10,14 @@ import { authMiddleware } from "~/middleware";
 
 const totpRouter = Router();
 
-totpRouter.post("/enable", authMiddleware, totpSetupLimiter, enableHandler);
+totpRouter.post("/enable", totpSetupLimiter, authMiddleware, enableHandler);
 totpRouter.post(
   "/confirm",
-  authMiddleware,
   totpSetupLimiter,
+  authMiddleware,
   confirmAndEnableHandler,
 );
-totpRouter.post("/verify", authMiddleware, totpVerifyLimiter, verifyHandler);
-totpRouter.post("/disable", authMiddleware, totpSetupLimiter, disableHandler);
+totpRouter.post("/verify", totpVerifyLimiter, authMiddleware, verifyHandler);
+totpRouter.post("/disable", totpSetupLimiter, authMiddleware, disableHandler);
 
 export { totpRouter };
