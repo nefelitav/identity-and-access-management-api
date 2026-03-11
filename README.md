@@ -227,12 +227,12 @@ apps/api/
 ├── services/        # Business logic
 ├── utils/           # Logger, tokens, hashing, email, SMS, rate limiting
 ├── validation/      # Zod schemas
-├── tests/           # Unit & integration tests
+├── tests/           # Unit, integration & e2e tests
 ├── app.ts           # Express app setup
 └── server.ts        # Server entrypoint
 ```
 
-The codebase follows a **functional architecture** — no classes. All modules export plain functions and factory functions. Dependency injection is handled by a lightweight custom DI container.
+The codebase follows a **functional architecture**. All modules export plain functions and factory functions. Dependency injection is handled by a lightweight custom DI container.
 
 ### Key patterns
 
@@ -252,7 +252,7 @@ The codebase follows a **functional architecture** — no classes. All modules e
 
 ## Testing
 
-Integration and E2E tests run against **real PostgreSQL and Redis** instances (no mocks). A `docker-compose.test.yml` spins up isolated test containers on ports 5433 (Postgres) and 6380 (Redis).
+At the moment, our code includes 300 tests. A `docker-compose.test.yml` spins up isolated test containers on ports 5433 (Postgres) and 6380 (Redis).
 
 ```bash
 # Start test infrastructure
